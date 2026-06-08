@@ -13,22 +13,22 @@ public class DrugInventory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "DrugID")
+    @Column(name = "Drug_id")
     private Long drugID;
 
-    @Column(name = "DrugName", nullable = false, length = 150)
+    @Column(name = "Drug_Name", nullable = false, length = 150)
     private String drugName;
 
     @Column(name = "Category", length = 100)
     private String category;
 
-    @Column(name = "QuantityInStock", nullable = false)
+    @Column(name = "Quantity_INStock", nullable = false)
     private int quantityInStock;
 
-    @Column(name = "ReorderLevel", nullable = false)
+    @Column(name = "Reorder_Level", nullable = false)
     private int reorderLevel = 50;
 
-    @Column(name = "ExpiryDate", nullable = false)
+    @Column(name = "Expiry_Date", nullable = false)
     private LocalDate expiryDate;
 
     @Enumerated(EnumType.STRING)

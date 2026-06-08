@@ -13,25 +13,25 @@ public class Invoice {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "InvoiceID")
+    @Column(name = "Invoice_id")
     private Long invoiceID;
 
-    @Column(name = "PatientID", nullable = false)
+    @Column(name = "Patient_id", nullable = false)
     private Long patientID;
 
-    @Column(name = "ConsultationID")
+    @Column(name = "Consultation_id")
     private Long consultationID;
 
-    @Column(name = "TotalAmount", nullable = false)
+    @Column(name = "Total_Amount", nullable = false)
     private double totalAmount;
 
-    @Column(name = "PaidAmount", nullable = false)
+    @Column(name = "Paid_Amount", nullable = false)
     private double paidAmount = 0.0;
 
-    @Column(name = "OutstandingAmount", nullable = false)
+    @Column(name = "Outstanding_Amount", nullable = false)
     private double outstandingAmount;
 
-    @Column(name = "InvoiceDate", nullable = false)
+    @Column(name = "Invoice_Date", nullable = false)
     private LocalDateTime invoiceDate = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)

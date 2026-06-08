@@ -13,24 +13,24 @@ public class Dispensation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "DispensationID")
+    @Column(name = "Dispensation_id")
     private Long dispensationID;
 
 
     @ManyToOne
-    @JoinColumn(name = "DrugID", nullable = false)
+    @JoinColumn(name = "Drug_id", nullable = false)
     private DrugInventory drug;
 
-    @Column(name = "PrescriptionID", nullable = false)
+    @Column(name = "Prescription_id", nullable = false)
     private Long prescriptionID;
 
-    @Column(name = "QuantityDispensed", nullable = false)
+    @Column(name = "Quantity_Dispensed", nullable = false)
     private int quantityDispensed;
 
-    @Column(name = "DispensedByID", nullable = false)
+    @Column(name = "DispensedBy_id", nullable = false)
     private Long dispensedByID;
 
-    @Column(name = "DispensationDate", nullable = false)
+    @Column(name = "Dispensation_Date", nullable = false)
     private LocalDateTime dispensationDate = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)

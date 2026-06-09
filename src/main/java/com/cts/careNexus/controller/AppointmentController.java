@@ -1,12 +1,10 @@
-package com.example.demo.controller;
+package com.cts.careNexus.controller;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.List;
+import com.cts.careNexus.repository.AppointmentRepository;
 
-import com.example.demo.entity.Appointment;
-import com.example.demo.repository.AppointmentRepository;
 
 @RestController
 @RequestMapping("/appointments")
@@ -16,7 +14,7 @@ public class AppointmentController {
     private AppointmentRepository repo;
 
     @GetMapping
-    public List<Appointment> getAllAppointments() {
+    public Object getAllAppointments() {
         return repo.findAll();
     }
 }

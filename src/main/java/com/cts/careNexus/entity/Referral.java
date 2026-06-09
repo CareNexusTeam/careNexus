@@ -1,4 +1,4 @@
-package com.example.demo.entity;
+package com.cts.careNexus.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;

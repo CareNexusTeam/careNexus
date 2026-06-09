@@ -1,8 +1,17 @@
 package com.cts.careNexus.repository;
 
+import com.cts.careNexus.entity.Referral;
 import org.springframework.data.jpa.repository.JpaRepository;
-import com.example.demo.entity.Referral;
+import org.springframework.stereotype.Repository;
 
-public interface ReferralRepository
-        extends JpaRepository<Referral, Long>{
+import java.util.List;
+
+@Repository
+public interface ReferralRepository extends JpaRepository<Referral, Long> {
+
+    List<Referral> findByConsultationID(Integer consultationID);
+
+    List<Referral> findByStatus(String status);
+
+    List<Referral> findByPriority(Referral.Priority priority);
 }

@@ -1,4 +1,4 @@
-package com.cts.careNexus.entity;
+package com.cts.careNexus.moduls.appointment_schedule.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;

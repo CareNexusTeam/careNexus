@@ -1,7 +1,7 @@
-package com.cts.careNexus.repository;
+package com.cts.careNexus.moduls.appointment_schedule.repository;
 
 // CRITICAL: Ensure this is the exact package being imported!
-import com.cts.careNexus.entity.Appointment;
+import com.cts.careNexus.moduls.appointment_schedule.entity.Appointment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

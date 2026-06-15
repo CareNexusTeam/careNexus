@@ -1,6 +1,6 @@
-package com.cts.careNexus.repository;
+package com.cts.careNexus.moduls.appointment_schedule.repository;
 
-import com.cts.careNexus.entity.DoctorSchedule;
+import com.cts.careNexus.moduls.appointment_schedule.entity.DoctorSchedule;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

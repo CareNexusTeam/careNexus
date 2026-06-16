@@ -1,9 +1,10 @@
-package com.cts.careNexus.Notification.DTO;
+package com.cts.careNexus.moduls.Notification.DTO;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
 @Data

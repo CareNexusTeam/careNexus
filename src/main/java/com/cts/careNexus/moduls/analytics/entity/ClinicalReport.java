@@ -1,18 +1,19 @@
-package com.cts.careNexus.analytics.entity;
+package com.cts.careNexus.moduls.analytics.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "clinical_report")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Entity
+@Table(name = "clinical_report")
 public class ClinicalReport {
 
     @Id
@@ -21,10 +22,16 @@ public class ClinicalReport {
     private Long reportId;
 
     @Column(name = "scope", nullable = false, length = 100)
-    private String scope;
+    private String scope;  // e.g. "Department", "Doctor", "Period"
 
     @Column(name = "patient_count")
     private Integer patientCount;
+
+    @Column(name = "bed_occupancy")
+    private Integer bedOccupancy;
+
+    @Column(name = "avg_consultation_time")
+    private Double avgConsultationTime;
 
     @Column(name = "revenue_collected")
     private Double revenueCollected;

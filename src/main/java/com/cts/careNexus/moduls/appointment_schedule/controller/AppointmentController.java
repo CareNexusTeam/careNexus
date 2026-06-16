@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/appointments")
@@ -40,6 +41,14 @@ public class AppointmentController {
                                                          @RequestBody Appointment appointmentDetails) {
         return appointmentService.updateAppointment(id, appointmentDetails)
                 .map(updatedAppointment -> new ResponseEntity<>(updatedAppointment, HttpStatus.OK))
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<Appointment> patchAppointment(@PathVariable("id") Long id,
+                                                        @RequestBody Map<String, Object> updates) {
+        return appointmentService.patchAppointment(id, updates)
+                .map(patchedAppointment -> new ResponseEntity<>(patchedAppointment, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 

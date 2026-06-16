@@ -5,7 +5,10 @@ import com.cts.careNexus.moduls.appointment_schedule.repository.DoctorScheduleRe
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -43,6 +46,36 @@ public class DoctorScheduleServiceImpl implements DoctorScheduleService {
             existing.setEndTime(newData.getEndTime());
             existing.setSlotDurationMinutes(newData.getSlotDurationMinutes());
             existing.setAvailableSlots(newData.getAvailableSlots());
+            return scheduleRepository.save(existing);
+        });
+    }
+
+    @Override
+    public Optional<DoctorSchedule> patchSchedule(Long id, Map<String, Object> updates) {
+        return scheduleRepository.findById(id).map(existing -> {
+
+            if (updates.containsKey("doctorID")) {
+                existing.setDoctorID((Integer) updates.get("doctorID"));
+            }
+            if (updates.containsKey("date")) {
+                String dateStr = (String) updates.get("date");
+                existing.setDate(dateStr != null ? LocalDate.parse(dateStr) : null);
+            }
+            if (updates.containsKey("startTime")) {
+                String startTimeStr = (String) updates.get("startTime");
+                existing.setStartTime(startTimeStr != null ? LocalTime.parse(startTimeStr) : null);
+            }
+            if (updates.containsKey("endTime")) {
+                String endTimeStr = (String) updates.get("endTime");
+                existing.setEndTime(endTimeStr != null ? LocalTime.parse(endTimeStr) : null);
+            }
+            if (updates.containsKey("slotDurationMinutes")) {
+                existing.setSlotDurationMinutes((Integer) updates.get("slotDurationMinutes"));
+            }
+            if (updates.containsKey("availableSlots")) {
+                existing.setAvailableSlots((Integer) updates.get("availableSlots"));
+            }
+
             return scheduleRepository.save(existing);
         });
     }

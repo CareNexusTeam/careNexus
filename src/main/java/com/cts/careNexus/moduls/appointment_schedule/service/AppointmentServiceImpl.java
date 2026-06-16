@@ -5,7 +5,9 @@ import com.cts.careNexus.moduls.appointment_schedule.repository.AppointmentRepos
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -38,6 +40,34 @@ public class AppointmentServiceImpl implements AppointmentService {
             existingAppointment.setScheduledDateTime(appointmentDetails.getScheduledDateTime());
             existingAppointment.setType(appointmentDetails.getType());
             existingAppointment.setStatus(appointmentDetails.getStatus());
+
+            return appointmentRepository.save(existingAppointment);
+        });
+    }
+
+    @Override
+    public Optional<Appointment> patchAppointment(Long id, Map<String, Object> updates) {
+        return appointmentRepository.findById(id).map(existingAppointment -> {
+
+            if (updates.containsKey("patientID")) {
+                existingAppointment.setPatientID((Integer) updates.get("patientID"));
+            }
+            if (updates.containsKey("doctorID")) {
+                existingAppointment.setDoctorID((Integer) updates.get("doctorID"));
+            }
+            if (updates.containsKey("departmentID")) {
+                existingAppointment.setDepartmentID((Integer) updates.get("departmentID"));
+            }
+            if (updates.containsKey("scheduledDateTime")) {
+                String dateTimeStr = (String) updates.get("scheduledDateTime");
+                existingAppointment.setScheduledDateTime(dateTimeStr != null ? LocalDateTime.parse(dateTimeStr) : null);
+            }
+            if (updates.containsKey("type")) {
+                existingAppointment.setType((String) updates.get("type"));
+            }
+            if (updates.containsKey("status")) {
+                existingAppointment.setStatus((String) updates.get("status"));
+            }
 
             return appointmentRepository.save(existingAppointment);
         });

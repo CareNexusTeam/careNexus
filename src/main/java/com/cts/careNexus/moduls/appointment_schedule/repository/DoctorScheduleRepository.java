@@ -9,6 +9,5 @@ import java.util.List;
 @Repository
 public interface DoctorScheduleRepository extends JpaRepository<DoctorSchedule, Long> {
 
-    // Optional: find schedules by doctor
     List<DoctorSchedule> findByDoctorID(Integer doctorID);
 }

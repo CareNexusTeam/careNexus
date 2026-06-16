@@ -23,7 +23,6 @@ public class Appointment {
     @Column(name = "DepartmentID")
     private Integer departmentID;
 
-
     @Column(name = "`ScheduledDateTime`")
     private LocalDateTime scheduledDateTime;
 
@@ -31,5 +30,5 @@ public class Appointment {
     private String type;
 
     @Column(name = "Status")
-    private String status;
+    private String Status;
 }

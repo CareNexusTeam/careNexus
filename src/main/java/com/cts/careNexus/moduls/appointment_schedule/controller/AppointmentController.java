@@ -1,6 +1,6 @@
 package com.cts.careNexus.moduls.appointment_schedule.controller;
 
-import com.cts.careNexus.moduls.appointment_schedule.entity.Appointment;
+import com.cts.careNexus.moduls.appointment_schedule.dto.AppointmentDto;
 import com.cts.careNexus.moduls.appointment_schedule.service.AppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,35 +18,39 @@ public class AppointmentController {
     private AppointmentService appointmentService;
 
     @PostMapping
-    public ResponseEntity<Appointment> createAppointment(@RequestBody Appointment appointment) {
-        Appointment savedAppointment = appointmentService.createAppointment(appointment);
+    public ResponseEntity<AppointmentDto> createAppointment(@RequestBody AppointmentDto appointmentDTO) {
+        AppointmentDto savedAppointment = appointmentService.createAppointment(appointmentDTO);
         return new ResponseEntity<>(savedAppointment, HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<List<Appointment>> getAllAppointments() {
-        List<Appointment> appointments = appointmentService.getAllAppointments();
+    public ResponseEntity<List<AppointmentDto>> getAllAppointments() {
+        List<AppointmentDto> appointments = appointmentService.getAllAppointments();
         return new ResponseEntity<>(appointments, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Appointment> getAppointmentById(@PathVariable("id") Long id) {
+    public ResponseEntity<AppointmentDto> getAppointmentById(@PathVariable("id") Long id) {
         return appointmentService.getAppointmentById(id)
                 .map(appointment -> new ResponseEntity<>(appointment, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Appointment> updateAppointment(@PathVariable("id") Long id,
-                                                         @RequestBody Appointment appointmentDetails) {
-        return appointmentService.updateAppointment(id, appointmentDetails)
+    public ResponseEntity<AppointmentDto> updateAppointment(
+            @PathVariable("id") Long id,
+            @RequestBody AppointmentDto appointmentDTO) {
+
+        return appointmentService.updateAppointment(id, appointmentDTO)
                 .map(updatedAppointment -> new ResponseEntity<>(updatedAppointment, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Appointment> patchAppointment(@PathVariable("id") Long id,
-                                                        @RequestBody Map<String, Object> updates) {
+    public ResponseEntity<AppointmentDto> patchAppointment(
+            @PathVariable("id") Long id,
+            @RequestBody Map<String, Object> updates) {
+
         return appointmentService.patchAppointment(id, updates)
                 .map(patchedAppointment -> new ResponseEntity<>(patchedAppointment, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
@@ -56,11 +60,13 @@ public class AppointmentController {
     public ResponseEntity<Void> deleteAppointment(@PathVariable("id") Long id) {
         try {
             boolean isDeleted = appointmentService.deleteAppointment(id);
+
             if (isDeleted) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            } else {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
+
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }

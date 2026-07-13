@@ -1,15 +1,16 @@
 package com.cts.careNexus.moduls.appointment_schedule.service;
 
+import com.cts.careNexus.moduls.appointment_schedule.dto.AppointmentDto;
 import com.cts.careNexus.moduls.appointment_schedule.entity.Appointment;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public interface AppointmentService {
-    Appointment createAppointment(Appointment appointment);
-    List<Appointment> getAllAppointments();
-    Optional<Appointment> getAppointmentById(Long id);
-    Optional<Appointment> updateAppointment(Long id, Appointment appointmentDetails);
-    Optional<Appointment> patchAppointment(Long id, Map<String, Object> updates); // Added for PATCH
+    AppointmentDto createAppointment(AppointmentDto appointmentDto);
+    List<AppointmentDto> getAllAppointments();
+    Optional<AppointmentDto> getAppointmentById(Long id);
+    Optional<AppointmentDto> updateAppointment(Long id, AppointmentDto appointmentDetails);
+    Optional<AppointmentDto> patchAppointment(Long id, Map<String, Object> updates); // Added for PATCH
     boolean deleteAppointment(Long id);
 }

@@ -1,6 +1,6 @@
-package com.cts.careNexus.moduls.appointment_schedule.workflow_emr.service;
+package com.cts.careNexus.moduls.workflow_emr.service;
 
-import com.cts.careNexus.moduls.appointment_schedule.workflow_emr.entity.Referral;
+import com.cts.careNexus.moduls.workflow_emr.entity.Referral;
 import java.util.List;
 import java.util.Optional;
 

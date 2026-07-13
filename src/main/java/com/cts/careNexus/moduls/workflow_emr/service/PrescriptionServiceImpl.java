@@ -1,7 +1,8 @@
-package com.cts.careNexus.moduls.appointment_schedule.workflow_emr.service;
+package com.cts.careNexus.moduls.workflow_emr.service;
 
-import com.cts.careNexus.moduls.appointment_schedule.workflow_emr.entity.Prescription;
-import com.cts.careNexus.moduls.appointment_schedule.workflow_emr.repository.PrescriptionRepository;
+import com.cts.careNexus.moduls.exception.ResourceNotFoundException;
+import com.cts.careNexus.moduls.workflow_emr.entity.Prescription;
+import com.cts.careNexus.moduls.workflow_emr.repository.PrescriptionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +27,10 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
     @Override
     public Optional<Prescription> getPrescriptionById(Long id) {
-        return prescriptionRepository.findById(id);
+        Prescription prescription = prescriptionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Prescription", "id", id));
+
+        return Optional.of(prescription);
     }
 
     @Override
@@ -41,24 +45,27 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
     @Override
     public Optional<Prescription> updatePrescription(Long id, Prescription newData) {
-        return prescriptionRepository.findById(id).map(existing -> {
-            existing.setConsultationID(newData.getConsultationID());
-            existing.setPatientID(newData.getPatientID());
-            existing.setMedicationName(newData.getMedicationName());
-            existing.setDosage(newData.getDosage());
-            existing.setFrequency(newData.getFrequency());
-            existing.setDuration(newData.getDuration());
-            existing.setStatus(newData.getStatus());
-            return prescriptionRepository.save(existing);
-        });
+        Prescription existing = prescriptionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Prescription", "id", id));
+
+        existing.setConsultationID(newData.getConsultationID());
+        existing.setPatientID(newData.getPatientID());
+        existing.setMedicationName(newData.getMedicationName());
+        existing.setDosage(newData.getDosage());
+        existing.setFrequency(newData.getFrequency());
+        existing.setDuration(newData.getDuration());
+        existing.setStatus(newData.getStatus());
+
+        return Optional.of(prescriptionRepository.save(existing));
     }
 
     @Override
     public boolean deletePrescription(Long id) {
-        if (prescriptionRepository.existsById(id)) {
-            prescriptionRepository.deleteById(id);
-            return true;
+        if (!prescriptionRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Prescription", "id", id);
         }
-        return false;
+
+        prescriptionRepository.deleteById(id);
+        return true;
     }
 }

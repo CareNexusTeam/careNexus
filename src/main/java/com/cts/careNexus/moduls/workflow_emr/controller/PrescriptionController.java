@@ -1,7 +1,7 @@
-package com.cts.careNexus.moduls.appointment_schedule.workflow_emr.controller;
+package com.cts.careNexus.moduls.workflow_emr.controller;
 
-import com.cts.careNexus.moduls.appointment_schedule.workflow_emr.entity.Prescription;
-import com.cts.careNexus.moduls.appointment_schedule.workflow_emr.service.PrescriptionService;
+import com.cts.careNexus.moduls.workflow_emr.entity.Prescription;
+import com.cts.careNexus.moduls.workflow_emr.service.PrescriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

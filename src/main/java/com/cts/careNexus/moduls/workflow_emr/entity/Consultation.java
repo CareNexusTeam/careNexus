@@ -39,7 +39,6 @@ public class Consultation {
     @Column(name = "Status")
     private ConsultationStatus status;
 
-    // ENUM for Status
     public enum ConsultationStatus {
         InProgress,
         Completed

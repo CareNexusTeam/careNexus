@@ -1,7 +1,8 @@
-package com.cts.careNexus.moduls.appointment_schedule.workflow_emr.service;
+package com.cts.careNexus.moduls.workflow_emr.service;
 
-import com.cts.careNexus.moduls.appointment_schedule.workflow_emr.entity.Referral;
-import com.cts.careNexus.moduls.appointment_schedule.workflow_emr.repository.ReferralRepository;
+import com.cts.careNexus.moduls.exception.ResourceNotFoundException;
+import com.cts.careNexus.moduls.workflow_emr.entity.Referral;
+import com.cts.careNexus.moduls.workflow_emr.repository.ReferralRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +27,10 @@ public class ReferralServiceImpl implements ReferralService {
 
     @Override
     public Optional<Referral> getReferralById(Long id) {
-        return referralRepository.findById(id);
+        Referral referral = referralRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Referral", "id", id));
+
+        return Optional.of(referral);
     }
 
     @Override
@@ -46,22 +50,25 @@ public class ReferralServiceImpl implements ReferralService {
 
     @Override
     public Optional<Referral> updateReferral(Long id, Referral newReferral) {
-        return referralRepository.findById(id).map(existingReferral -> {
-            existingReferral.setConsultationID(newReferral.getConsultationID());
-            existingReferral.setReferredToDepartment(newReferral.getReferredToDepartment());
-            existingReferral.setReason(newReferral.getReason());
-            existingReferral.setPriority(newReferral.getPriority());
-            existingReferral.setStatus(newReferral.getStatus());
-            return referralRepository.save(existingReferral);
-        });
+        Referral existingReferral = referralRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Referral", "id", id));
+
+        existingReferral.setConsultationID(newReferral.getConsultationID());
+        existingReferral.setReferredToDepartment(newReferral.getReferredToDepartment());
+        existingReferral.setReason(newReferral.getReason());
+        existingReferral.setPriority(newReferral.getPriority());
+        existingReferral.setStatus(newReferral.getStatus());
+
+        return Optional.of(referralRepository.save(existingReferral));
     }
 
     @Override
     public boolean deleteReferral(Long id) {
-        if (referralRepository.existsById(id)) {
-            referralRepository.deleteById(id);
-            return true;
+        if (!referralRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Referral", "id", id);
         }
-        return false;
+
+        referralRepository.deleteById(id);
+        return true;
     }
 }

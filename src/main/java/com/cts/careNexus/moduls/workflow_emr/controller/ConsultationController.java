@@ -1,7 +1,7 @@
-package com.cts.careNexus.moduls.appointment_schedule.workflow_emr.controller;
+package com.cts.careNexus.moduls.workflow_emr.controller;
 
-import com.cts.careNexus.moduls.appointment_schedule.workflow_emr.entity.Consultation;
-import com.cts.careNexus.moduls.appointment_schedule.workflow_emr.service.ConsultationService;
+import com.cts.careNexus.moduls.workflow_emr.entity.Consultation;
+import com.cts.careNexus.moduls.workflow_emr.service.ConsultationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +42,7 @@ public class ConsultationController {
                 .map(updated -> new ResponseEntity<>(updated, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteConsultation(@PathVariable Long id) {

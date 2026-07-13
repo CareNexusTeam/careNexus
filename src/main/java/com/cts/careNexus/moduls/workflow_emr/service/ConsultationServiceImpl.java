@@ -1,7 +1,8 @@
-package com.cts.careNexus.moduls.appointment_schedule.workflow_emr.service;
+package com.cts.careNexus.moduls.workflow_emr.service;
 
-import com.cts.careNexus.moduls.appointment_schedule.workflow_emr.entity.Consultation;
-import com.cts.careNexus.moduls.appointment_schedule.workflow_emr.repository.ConsultationRepository;
+import com.cts.careNexus.moduls.exception.ResourceNotFoundException;
+import com.cts.careNexus.moduls.workflow_emr.entity.Consultation;
+import com.cts.careNexus.moduls.workflow_emr.repository.ConsultationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,31 +27,36 @@ public class ConsultationServiceImpl implements ConsultationService {
 
     @Override
     public Optional<Consultation> getConsultationById(Long id) {
-        return consultationRepository.findById(id);
+        Consultation consultation = consultationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Consultation", "id", id));
+
+        return Optional.of(consultation);
     }
 
     @Override
     public Optional<Consultation> updateConsultation(Long id, Consultation newData) {
-        return consultationRepository.findById(id).map(existing -> {
-            existing.setAppointmentID(newData.getAppointmentID());
-            existing.setPatientID(newData.getPatientID());
-            existing.setDoctorID(newData.getDoctorID());
-            existing.setSymptoms(newData.getSymptoms());
-            existing.setDiagnosis(newData.getDiagnosis());
-            existing.setTreatmentPlan(newData.getTreatmentPlan());
-            existing.setConsultationDate(newData.getConsultationDate());
-            existing.setStatus(newData.getStatus());
+        Consultation existing = consultationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Consultation", "id", id));
 
-            return consultationRepository.save(existing);
-        });
+        existing.setAppointmentID(newData.getAppointmentID());
+        existing.setPatientID(newData.getPatientID());
+        existing.setDoctorID(newData.getDoctorID());
+        existing.setSymptoms(newData.getSymptoms());
+        existing.setDiagnosis(newData.getDiagnosis());
+        existing.setTreatmentPlan(newData.getTreatmentPlan());
+        existing.setConsultationDate(newData.getConsultationDate());
+        existing.setStatus(newData.getStatus());
+
+        return Optional.of(consultationRepository.save(existing));
     }
 
     @Override
     public boolean deleteConsultation(Long id) {
-        if (consultationRepository.existsById(id)) {
-            consultationRepository.deleteById(id);
-            return true;
+        if (!consultationRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Consultation", "id", id);
         }
-        return false;
+
+        consultationRepository.deleteById(id);
+        return true;
     }
 }

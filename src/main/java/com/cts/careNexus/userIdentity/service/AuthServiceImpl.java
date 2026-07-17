@@ -1,8 +1,8 @@
 package com.cts.careNexus.userIdentity.service;
 
-import com.cts.careNexus.userIdentity.dto.AuthResponse;
-import com.cts.careNexus.userIdentity.dto.LoginRequest;
-import com.cts.careNexus.userIdentity.dto.UserRegisterRequest;
+import com.cts.careNexus.userIdentity.dto.AuthResponseDto;
+import com.cts.careNexus.userIdentity.dto.LoginRequestDto;
+import com.cts.careNexus.userIdentity.dto.UserRegisterRequestDto;
 import com.cts.careNexus.userIdentity.entities.User;
 import com.cts.careNexus.userIdentity.entities.UserStatus;
 import com.cts.careNexus.userIdentity.repository.UserRepo;
@@ -28,9 +28,10 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private JwtService jwtService;
 
+    // Checks for duplicate email, encodes the password, sets active status, and persists the new user entity.
     @Override
     @Transactional
-    public User registerUser(UserRegisterRequest request) {
+    public User registerUser(UserRegisterRequestDto request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Email is already registered!");
         }
@@ -48,9 +49,10 @@ public class AuthServiceImpl implements AuthService {
         return userRepository.save(user);
     }
 
+    // Authenticates credentials, verifies the user account is active, and issues a JWT token in the response DTO.
     @Override
     @Transactional(readOnly = true)
-    public AuthResponse login(LoginRequest request) {
+    public AuthResponseDto login(LoginRequestDto request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
@@ -64,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
 
         String jwtToken = jwtService.generateToken(user.getEmail(), user.getRole().name());
 
-        return new AuthResponse(
+        return new AuthResponseDto(
                 jwtToken,
                 user.getUserId(),
                 user.getName(),

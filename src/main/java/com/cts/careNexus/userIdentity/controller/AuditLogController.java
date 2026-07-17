@@ -14,6 +14,7 @@ public class AuditLogController {
     @Autowired
     private AuditLogService auditLogService;
 
+    // Handles HTTP GET requests to fetch and return the chronological list of audit logs for a specific user ID.
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<AuditLog>> getLogsByUser(@PathVariable Long userId) {
         return ResponseEntity.ok(auditLogService.getLogsByUser(userId));

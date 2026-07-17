@@ -8,8 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PatientServiceImpl implements PatientService {
@@ -17,91 +17,38 @@ public class PatientServiceImpl implements PatientService {
     @Autowired
     private PatientRepo patientRepo;
 
+    // Converts the DTO to an entity, sets the default status to Active if null, and saves the new patient.
     @Override
     @Transactional
     public PatientDto createPatient(PatientDto patientDto) {
-
-        Patient patient = new Patient();
-        patient.setName(patientDto.getName());
-        patient.setDateOfBirth(patientDto.getDateOfBirth());
-        patient.setGender(patientDto.getGender());
-        patient.setBloodGroup(patientDto.getBloodGroup());
-        patient.setPhone(patientDto.getPhone());
-        patient.setEmail(patientDto.getEmail());
-        patient.setAddress(patientDto.getAddress());
-        patient.setEmergencyContact(patientDto.getEmergencyContact());
-        patient.setInsuranceProviderId(patientDto.getInsuranceProviderId());
-
-        if (patientDto.getStatus() == null) {
+        Patient patient = mapToEntity(patientDto);
+        if (patient.getStatus() == null) {
             patient.setStatus(PatientStatus.Active);
-        } else {
-            patient.setStatus(patientDto.getStatus());
         }
-
         Patient savedPatient = patientRepo.save(patient);
-
-        PatientDto responseDto = new PatientDto();
-        responseDto.setPatientId(savedPatient.getPatientId());
-        responseDto.setName(savedPatient.getName());
-        responseDto.setDateOfBirth(savedPatient.getDateOfBirth());
-        responseDto.setGender(savedPatient.getGender());
-        responseDto.setBloodGroup(savedPatient.getBloodGroup());
-        responseDto.setPhone(savedPatient.getPhone());
-        responseDto.setEmail(savedPatient.getEmail());
-        responseDto.setAddress(savedPatient.getAddress());
-        responseDto.setEmergencyContact(savedPatient.getEmergencyContact());
-        responseDto.setInsuranceProviderId(savedPatient.getInsuranceProviderId());
-        responseDto.setStatus(savedPatient.getStatus());
-
-        return responseDto;
+        return mapToDto(savedPatient);
     }
 
+    // Fetches all patient records from the database and maps them into a list of DTOs.
     @Override
     @Transactional(readOnly = true)
     public List<PatientDto> getAllPatients() {
-        List<Patient> patients = patientRepo.findAll();
-        List<PatientDto> dtoList = new ArrayList<>();
-
-        for (Patient p : patients) {
-            PatientDto dto = new PatientDto();
-            dto.setPatientId(p.getPatientId());
-            dto.setName(p.getName());
-            dto.setDateOfBirth(p.getDateOfBirth());
-            dto.setGender(p.getGender());
-            dto.setBloodGroup(p.getBloodGroup());
-            dto.setPhone(p.getPhone());
-            dto.setEmail(p.getEmail());
-            dto.setAddress(p.getAddress());
-            dto.setEmergencyContact(p.getEmergencyContact());
-            dto.setInsuranceProviderId(p.getInsuranceProviderId());
-            dto.setStatus(p.getStatus());
-            dtoList.add(dto);
-        }
-        return dtoList;
+        return patientRepo.findAll()
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
     }
 
+    // Retrieves a specific patient by their ID or throws an exception if the record does not exist.
     @Override
     @Transactional(readOnly = true)
     public PatientDto getPatientById(Long patientId) {
         Patient patient = patientRepo.findById(patientId)
                 .orElseThrow(() -> new RuntimeException("Patient not found with id: " + patientId));
-
-        PatientDto dto = new PatientDto();
-        dto.setPatientId(patient.getPatientId());
-        dto.setName(patient.getName());
-        dto.setDateOfBirth(patient.getDateOfBirth());
-        dto.setGender(patient.getGender());
-        dto.setBloodGroup(patient.getBloodGroup());
-        dto.setPhone(patient.getPhone());
-        dto.setEmail(patient.getEmail());
-        dto.setAddress(patient.getAddress());
-        dto.setEmergencyContact(patient.getEmergencyContact());
-        dto.setInsuranceProviderId(patient.getInsuranceProviderId());
-        dto.setStatus(patient.getStatus());
-
-        return dto;
+        return mapToDto(patient);
     }
 
+    // Finds the patient, updates their provided details conditionally, and saves the changes.
     @Override
     @Transactional
     public PatientDto updatePatientStatus(PatientDto patientDto, Long patientId) {
@@ -115,28 +62,49 @@ public class PatientServiceImpl implements PatientService {
         if (patientDto.getAddress() != null) patient.setAddress(patientDto.getAddress());
 
         Patient updatedPatient = patientRepo.save(patient);
-
-        PatientDto responseDto = new PatientDto();
-        responseDto.setPatientId(updatedPatient.getPatientId());
-        responseDto.setName(updatedPatient.getName());
-        responseDto.setDateOfBirth(updatedPatient.getDateOfBirth());
-        responseDto.setGender(updatedPatient.getGender());
-        responseDto.setBloodGroup(updatedPatient.getBloodGroup());
-        responseDto.setPhone(updatedPatient.getPhone());
-        responseDto.setEmail(updatedPatient.getEmail());
-        responseDto.setAddress(updatedPatient.getAddress());
-        responseDto.setEmergencyContact(updatedPatient.getEmergencyContact());
-        responseDto.setInsuranceProviderId(updatedPatient.getInsuranceProviderId());
-        responseDto.setStatus(updatedPatient.getStatus());
-
-        return responseDto;
+        return mapToDto(updatedPatient);
     }
 
+    // Verifies the existence of a patient by their ID and deletes their record from the database.
     @Override
     @Transactional
     public void deletePatient(Long patientId) {
         Patient patient = patientRepo.findById(patientId)
                 .orElseThrow(() -> new RuntimeException("Patient not found with id: " + patientId));
         patientRepo.delete(patient);
+    }
+
+    // Transforms a Patient database entity object into a PatientDto data transfer object.
+    private PatientDto mapToDto(Patient patient) {
+        PatientDto dto = new PatientDto();
+        dto.setPatientId(patient.getPatientId());
+        dto.setName(patient.getName());
+        dto.setDateOfBirth(patient.getDateOfBirth());
+        dto.setGender(patient.getGender());
+        dto.setBloodGroup(patient.getBloodGroup());
+        dto.setPhone(patient.getPhone());
+        dto.setEmail(patient.getEmail());
+        dto.setAddress(patient.getAddress());
+        dto.setEmergencyContact(patient.getEmergencyContact());
+        dto.setInsuranceProviderId(patient.getInsuranceProviderId());
+        dto.setStatus(patient.getStatus());
+        return dto;
+    }
+
+    // Transforms a PatientDto data transfer object into a Patient database entity object.
+    private Patient mapToEntity(PatientDto dto) {
+        Patient patient = new Patient();
+        patient.setPatientId(dto.getPatientId());
+        patient.setName(dto.getName());
+        patient.setDateOfBirth(dto.getDateOfBirth());
+        patient.setGender(dto.getGender());
+        patient.setBloodGroup(dto.getBloodGroup());
+        patient.setPhone(dto.getPhone());
+        patient.setEmail(dto.getEmail());
+        patient.setAddress(dto.getAddress());
+        patient.setEmergencyContact(dto.getEmergencyContact());
+        patient.setInsuranceProviderId(dto.getInsuranceProviderId());
+        patient.setStatus(dto.getStatus());
+        return patient;
     }
 }

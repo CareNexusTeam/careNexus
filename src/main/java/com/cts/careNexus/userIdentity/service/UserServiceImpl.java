@@ -15,6 +15,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserRepo userRepository;
 
+    // Retrieves a specific user record by their unique ID or throws an exception if not found.
     @Override
     @Transactional(readOnly = true)
     public User getUserById(Long userId) {
@@ -22,6 +23,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
     }
 
+    // Fetches and returns a complete list of all user entities registered in the database.
     @Override
     @Transactional(readOnly = true)
     public List<User> getAllUsers() {
@@ -29,6 +31,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAll();
     }
 
+    // Finds the user, validates and converts the status string to an enum, then persists the updated record.
     @Override
     @Transactional
     public User updateUserStatus(Long userId, String status) {

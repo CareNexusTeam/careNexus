@@ -16,6 +16,7 @@ public class AuditLogServiceImpl implements AuditLogService {
     @Autowired
     private AuditLogRepo auditLogRepository;
 
+    // Creates, populates with current timestamp, and saves a new transaction-bounded audit log entity for a user action.
     @Override
     @Transactional
     public void logAction(User user, String action, String details) {
@@ -27,6 +28,7 @@ public class AuditLogServiceImpl implements AuditLogService {
         auditLogRepository.save(log);
     }
 
+    // Fetches and returns all audit log activities associated with a specific user ID, ordered chronologically descending.
     @Override
     @Transactional(readOnly = true)
     public List<AuditLog> getLogsByUser(Long userId) {

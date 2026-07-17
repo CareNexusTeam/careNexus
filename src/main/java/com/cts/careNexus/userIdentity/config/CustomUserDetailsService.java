@@ -1,3 +1,4 @@
+//Iska kaam bohot seedha hai—Database se user ka data nikalna.
 package com.cts.careNexus.userIdentity.config;
 
 import com.cts.careNexus.userIdentity.entities.User;
@@ -16,6 +17,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Autowired
     private UserRepo userRepository;
 
+    // Fetches the user by email from the database and
+    // maps their credentials and roles into a Spring Security UserDetails object.
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)

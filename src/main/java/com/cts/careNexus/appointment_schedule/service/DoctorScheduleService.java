@@ -1,6 +1,6 @@
 package com.cts.careNexus.appointment_schedule.service;
 
-import com.cts.careNexus.appointment_schedule.entity.DoctorSchedule;
+import com.cts.careNexus.appointment_schedule.dto.DoctorScheduleDTO;
 
 import java.util.List;
 import java.util.Map;
@@ -8,17 +8,19 @@ import java.util.Optional;
 
 public interface DoctorScheduleService {
 
-    DoctorSchedule createSchedule(DoctorSchedule schedule);
+    DoctorScheduleDTO createSchedule(DoctorScheduleDTO dto);
 
-    List<DoctorSchedule> getAllSchedules();
+    List<DoctorScheduleDTO> getAllSchedules();
 
-    Optional<DoctorSchedule> getScheduleById(Long id);
+    Optional<DoctorScheduleDTO> getScheduleById(Long id);
 
-    List<DoctorSchedule> getSchedulesByDoctorId(Long doctorId);
+    List<DoctorScheduleDTO> getSchedulesByDoctorId(Long doctorId);
 
-    Optional<DoctorSchedule> updateSchedule(Long id, DoctorSchedule newData);
+    DoctorScheduleDTO updateSchedule(Long id,
+                                     DoctorScheduleDTO dto);
 
-    Optional<DoctorSchedule> patchSchedule(Long id, Map<String, Object> updates);
+    DoctorScheduleDTO patchSchedule(Long id,
+                                    Map<String, Object> updates);
 
-    boolean deleteSchedule(Long id);
+    void deleteSchedule(Long id);
 }

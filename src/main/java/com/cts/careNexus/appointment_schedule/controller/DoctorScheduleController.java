@@ -1,15 +1,14 @@
 package com.cts.careNexus.appointment_schedule.controller;
 
-import com.cts.careNexus.appointment_schedule.entity.DoctorSchedule;
+import com.cts.careNexus.appointment_schedule.dto.DoctorScheduleDTO;
+import com.cts.careNexus.exception.ResourceNotFoundException;
 import com.cts.careNexus.appointment_schedule.service.DoctorScheduleService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,86 +17,73 @@ import java.util.Map;
 @Validated
 public class DoctorScheduleController {
 
-    @Autowired
-    private DoctorScheduleService scheduleService;
+    private final DoctorScheduleService scheduleService;
+
+    public DoctorScheduleController(
+            DoctorScheduleService scheduleService) {
+        this.scheduleService = scheduleService;
+    }
 
     @PostMapping("/create")
-    public ResponseEntity<DoctorSchedule> createSchedule(@Valid @RequestBody DoctorSchedule schedule) {
-        try {
-            DoctorSchedule created = scheduleService.createSchedule(schedule);
-            return ResponseEntity.status(HttpStatus.CREATED).body(created);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+    public ResponseEntity<DoctorScheduleDTO> createSchedule(
+            @Valid @RequestBody DoctorScheduleDTO dto) {
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(scheduleService.createSchedule(dto));
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<DoctorSchedule>> getAllSchedules() {
-        try {
-            List<DoctorSchedule> schedules = scheduleService.getAllSchedules();
-            return ResponseEntity.ok(schedules);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<List<DoctorScheduleDTO>> getAllSchedules() {
+
+        return ResponseEntity.ok(
+                scheduleService.getAllSchedules());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DoctorSchedule> getScheduleById(@PathVariable Long id) {
-        try {
-            return scheduleService.getScheduleById(id)
-                    .map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<DoctorScheduleDTO> getScheduleById(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                scheduleService.getScheduleById(id)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Schedule not found with id : " + id)));
     }
 
-    @GetMapping("/doctor/{doctorID}")
-    public ResponseEntity<List<DoctorSchedule>> getSchedulesByDoctorId(@PathVariable Long doctorID) {
-        try {
-            List<DoctorSchedule> schedules = scheduleService.getSchedulesByDoctorId(doctorID);
-            if (schedules.isEmpty()) {
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.ok(schedules);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    @GetMapping("/doctor/{doctorId}")
+    public ResponseEntity<List<DoctorScheduleDTO>>
+    getSchedulesByDoctorId(
+            @PathVariable Long doctorId) {
+
+        return ResponseEntity.ok(
+                scheduleService.getSchedulesByDoctorId(doctorId));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<DoctorSchedule> updateSchedule(@PathVariable Long id, @Valid @RequestBody DoctorSchedule scheduleDetails) {
-        try {
-            return scheduleService.updateSchedule(id, scheduleDetails)
-                    .map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+    public ResponseEntity<DoctorScheduleDTO> updateSchedule(
+            @PathVariable Long id,
+            @Valid @RequestBody DoctorScheduleDTO dto) {
+
+        return ResponseEntity.ok(
+                scheduleService.updateSchedule(id, dto));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<DoctorSchedule> patchSchedule(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
-        try {
-            return scheduleService.patchSchedule(id, updates)
-                    .map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+    public ResponseEntity<DoctorScheduleDTO> patchSchedule(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> updates) {
+
+        return ResponseEntity.ok(
+                scheduleService.patchSchedule(id, updates));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> deleteSchedule(@PathVariable Long id) {
-        try {
-            if (scheduleService.deleteSchedule(id)) {
-                Map<String, String> response = new HashMap<>();
-                response.put("message", "Schedule deleted successfully");
-                return ResponseEntity.ok(response);
-            }
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<String> deleteSchedule(
+            @PathVariable Long id) {
+
+        scheduleService.deleteSchedule(id);
+
+        return ResponseEntity.ok(
+                "Schedule deleted successfully");
     }
 }

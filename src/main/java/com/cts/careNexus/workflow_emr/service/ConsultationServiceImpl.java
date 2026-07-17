@@ -1,48 +1,75 @@
 package com.cts.careNexus.workflow_emr.service;
 
+import com.cts.careNexus.appointment_schedule.entity.Appointment;
+import com.cts.careNexus.appointment_schedule.repository.AppointmentRepository;
 import com.cts.careNexus.patientManagement.entities.Patient;
 import com.cts.careNexus.patientManagement.repository.PatientRepo;
 import com.cts.careNexus.userIdentity.entities.User;
 import com.cts.careNexus.userIdentity.repository.UserRepo;
-import com.cts.careNexus.appointment_schedule.entity.Appointment;
-import com.cts.careNexus.appointment_schedule.repository.AppointmentRepository;
-import com.cts.careNexus.workflow_emr.dto.ConsultationRequestDTO;
+import com.cts.careNexus.workflow_emr.dto.ConsultationDTO;
 import com.cts.careNexus.workflow_emr.entity.Consultation;
+import com.cts.careNexus.exception.ResourceNotFoundException;
 import com.cts.careNexus.workflow_emr.repository.ConsultationRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
-public class ConsultationServiceImpl implements ConsultationService {
+public class ConsultationServiceImpl
+        implements ConsultationService {
 
-    @Autowired
-    private ConsultationRepository consultationRepository;
+    private final ConsultationRepository consultationRepository;
 
-    @Autowired
-    private AppointmentRepository appointmentRepository;
+    private final AppointmentRepository appointmentRepository;
 
-    @Autowired
-    private PatientRepo patientRepository;
+    private final PatientRepo patientRepository;
 
-    @Autowired
-    private UserRepo userRepository;
+    private final UserRepo userRepository;
+
+    public ConsultationServiceImpl(
+            ConsultationRepository consultationRepository,
+            AppointmentRepository appointmentRepository,
+            PatientRepo patientRepository,
+            UserRepo userRepository) {
+
+        this.consultationRepository = consultationRepository;
+        this.appointmentRepository = appointmentRepository;
+        this.patientRepository = patientRepository;
+        this.userRepository = userRepository;
+    }
 
     @Override
-    public Consultation createConsultation(ConsultationRequestDTO dto) {
+    public ConsultationDTO createConsultation(
+            ConsultationDTO dto) {
 
-        Consultation consultation = new Consultation();
+        Appointment appointment =
+                appointmentRepository.findById(
+                                dto.getAppointmentId())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Appointment not found with id : "
+                                                + dto.getAppointmentId()));
 
-        Appointment appointment = appointmentRepository.findById(dto.getAppointmentId())
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+        Patient patient =
+                patientRepository.findById(
+                                dto.getPatientId())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Patient not found with id : "
+                                                + dto.getPatientId()));
 
-        Patient patient = patientRepository.findById(dto.getPatientId())
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+        User doctor =
+                userRepository.findById(
+                                dto.getDoctorId())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Doctor not found with id : "
+                                                + dto.getDoctorId()));
 
-        User doctor = userRepository.findById(dto.getDoctorId())
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+        Consultation consultation =
+                new Consultation();
 
         consultation.setAppointment(appointment);
         consultation.setPatient(patient);
@@ -50,50 +77,138 @@ public class ConsultationServiceImpl implements ConsultationService {
         consultation.setSymptoms(dto.getSymptoms());
         consultation.setDiagnosis(dto.getDiagnosis());
         consultation.setTreatmentPlan(dto.getTreatmentPlan());
-        consultation.setConsultationDate(dto.getConsultationDate());
-        consultation.setStatus(Consultation.ConsultationStatus.valueOf(dto.getStatus()));
+        consultation.setConsultationDate(
+                dto.getConsultationDate());
 
-        return consultationRepository.save(consultation);
+        consultation.setStatus(
+                Consultation.ConsultationStatus
+                        .valueOf(dto.getStatus()));
+
+        Consultation saved =
+                consultationRepository.save(consultation);
+
+        return convertToDTO(saved);
     }
 
     @Override
-    public List<Consultation> getAllConsultations() {
-        return consultationRepository.findAll();
+    public List<ConsultationDTO> getAllConsultations() {
+
+        return consultationRepository.findAll()
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Optional<Consultation> getConsultationById(Long id) {
-        return consultationRepository.findById(id);
+    public Optional<ConsultationDTO> getConsultationById(
+            Long id) {
+
+        return consultationRepository.findById(id)
+                .map(this::convertToDTO);
     }
 
     @Override
-    public Optional<Consultation> updateConsultation(Long id, ConsultationRequestDTO dto) {
+    public ConsultationDTO updateConsultation(
+            Long id,
+            ConsultationDTO dto) {
 
-        return consultationRepository.findById(id).map(existing -> {
+        Consultation existing =
+                consultationRepository.findById(id)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Consultation not found with id : "
+                                                + id));
 
-            Appointment appointment = appointmentRepository.findById(dto.getAppointmentId()).orElseThrow();
-            Patient patient = patientRepository.findById(dto.getPatientId()).orElseThrow();
-            User doctor = userRepository.findById(dto.getDoctorId()).orElseThrow();
+        Appointment appointment =
+                appointmentRepository.findById(
+                                dto.getAppointmentId())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Appointment not found with id : "
+                                                + dto.getAppointmentId()));
 
-            existing.setAppointment(appointment);
-            existing.setPatient(patient);
-            existing.setDoctor(doctor);
-            existing.setSymptoms(dto.getSymptoms());
-            existing.setDiagnosis(dto.getDiagnosis());
-            existing.setTreatmentPlan(dto.getTreatmentPlan());
-            existing.setConsultationDate(dto.getConsultationDate());
-            existing.setStatus(Consultation.ConsultationStatus.valueOf(dto.getStatus()));
+        Patient patient =
+                patientRepository.findById(
+                                dto.getPatientId())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Patient not found with id : "
+                                                + dto.getPatientId()));
 
-            return consultationRepository.save(existing);
-        });
+        User doctor =
+                userRepository.findById(
+                                dto.getDoctorId())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Doctor not found with id : "
+                                                + dto.getDoctorId()));
+
+        existing.setAppointment(appointment);
+        existing.setPatient(patient);
+        existing.setDoctor(doctor);
+        existing.setSymptoms(dto.getSymptoms());
+        existing.setDiagnosis(dto.getDiagnosis());
+        existing.setTreatmentPlan(dto.getTreatmentPlan());
+        existing.setConsultationDate(
+                dto.getConsultationDate());
+
+        existing.setStatus(
+                Consultation.ConsultationStatus
+                        .valueOf(dto.getStatus()));
+
+        return convertToDTO(
+                consultationRepository.save(existing));
     }
 
     @Override
-    public boolean deleteConsultation(Long id) {
-        if (consultationRepository.existsById(id)) {
-            consultationRepository.deleteById(id);
-            return true;
-        }
-        return false;
+    public void deleteConsultation(Long id) {
+
+        Consultation consultation =
+                consultationRepository.findById(id)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Consultation not found with id : "
+                                                + id));
+
+        consultationRepository.delete(consultation);
+    }
+
+    private ConsultationDTO convertToDTO(
+            Consultation consultation) {
+
+        ConsultationDTO dto =
+                new ConsultationDTO();
+
+        dto.setConsultationId(
+                consultation.getConsultationID());
+
+        dto.setAppointmentId(
+                consultation.getAppointment()
+                        .getAppointmentID());
+
+        dto.setPatientId(
+                consultation.getPatient()
+                        .getPatientId());
+
+        dto.setDoctorId(
+                consultation.getDoctor()
+                        .getUserId());
+
+        dto.setSymptoms(
+                consultation.getSymptoms());
+
+        dto.setDiagnosis(
+                consultation.getDiagnosis());
+
+        dto.setTreatmentPlan(
+                consultation.getTreatmentPlan());
+
+        dto.setConsultationDate(
+                consultation.getConsultationDate());
+
+        dto.setStatus(
+                consultation.getStatus().name());
+
+        return dto;
     }
 }

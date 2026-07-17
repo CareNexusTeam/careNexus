@@ -1,24 +1,24 @@
 package com.cts.careNexus.workflow_emr.service;
 
-import com.cts.careNexus.workflow_emr.dto.PrescriptionRequestDTO;
-import com.cts.careNexus.workflow_emr.entity.Prescription;
+import com.cts.careNexus.workflow_emr.dto.PrescriptionDTO;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface PrescriptionService {
 
-    Prescription createPrescription(PrescriptionRequestDTO dto);
+    PrescriptionDTO createPrescription(PrescriptionDTO dto);
 
-    List<Prescription> getAllPrescriptions();
+    List<PrescriptionDTO> getAllPrescriptions();
 
-    Optional<Prescription> getPrescriptionById(Long id);
+    Optional<PrescriptionDTO> getPrescriptionById(Long id);
 
-    List<Prescription> getPrescriptionsByPatientId(Long patientId);
+    List<PrescriptionDTO> getPrescriptionsByPatientId(Long patientId);
 
-    List<Prescription> getPrescriptionsByConsultationId(Long consultationId);
+    List<PrescriptionDTO> getPrescriptionsByConsultationId(Long consultationId);
 
-    Optional<Prescription> updatePrescription(Long id, PrescriptionRequestDTO dto);
+    PrescriptionDTO updatePrescription(Long id,
+                                       PrescriptionDTO dto);
 
-    boolean deletePrescription(Long id);
+    void deletePrescription(Long id);
 }

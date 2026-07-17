@@ -1,67 +1,178 @@
 package com.cts.careNexus.workflow_emr.service;
 
+import com.cts.careNexus.workflow_emr.dto.ReferralDTO;
 import com.cts.careNexus.workflow_emr.entity.Referral;
+import com.cts.careNexus.exception.ResourceNotFoundException;
 import com.cts.careNexus.workflow_emr.repository.ReferralRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
-public class ReferralServiceImpl implements ReferralService {
+public class ReferralServiceImpl
+        implements ReferralService {
 
-    @Autowired
-    private ReferralRepository referralRepository;
+    private final ReferralRepository referralRepository;
 
-    @Override
-    public Referral createReferral(Referral referral) {
-        return referralRepository.save(referral);
+    public ReferralServiceImpl(
+            ReferralRepository referralRepository) {
+
+        this.referralRepository = referralRepository;
     }
 
     @Override
-    public List<Referral> getAllReferrals() {
-        return referralRepository.findAll();
+    public ReferralDTO createReferral(
+            ReferralDTO dto) {
+
+        Referral referral = new Referral();
+
+        referral.setConsultationID(
+                dto.getConsultationID());
+
+        referral.setReferredToDepartment(
+                dto.getReferredToDepartment());
+
+        referral.setReason(
+                dto.getReason());
+
+        referral.setPriority(
+                Referral.Priority.valueOf(
+                        dto.getPriority()));
+
+        referral.setStatus(
+                dto.getStatus());
+
+        Referral saved =
+                referralRepository.save(referral);
+
+        return convertToDTO(saved);
     }
 
     @Override
-    public Optional<Referral> getReferralById(Long id) {
-        return referralRepository.findById(id);
+    public List<ReferralDTO> getAllReferrals() {
+
+        return referralRepository.findAll()
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<Referral> getReferralsByConsultationId(Integer consultationID) {
-        return referralRepository.findByConsultationID(consultationID);
+    public Optional<ReferralDTO> getReferralById(
+            Long id) {
+
+        return referralRepository.findById(id)
+                .map(this::convertToDTO);
     }
 
     @Override
-    public List<Referral> getReferralsByStatus(String status) {
-        return referralRepository.findByStatus(status);
+    public List<ReferralDTO>
+    getReferralsByConsultationId(
+            Integer consultationID) {
+
+        return referralRepository
+                .findByConsultationID(consultationID)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<Referral> getReferralsByPriority(Referral.Priority priority) {
-        return referralRepository.findByPriority(priority);
+    public List<ReferralDTO>
+    getReferralsByStatus(
+            String status) {
+
+        return referralRepository
+                .findByStatus(status)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Optional<Referral> updateReferral(Long id, Referral newReferral) {
-        return referralRepository.findById(id).map(existingReferral -> {
-            existingReferral.setConsultationID(newReferral.getConsultationID());
-            existingReferral.setReferredToDepartment(newReferral.getReferredToDepartment());
-            existingReferral.setReason(newReferral.getReason());
-            existingReferral.setPriority(newReferral.getPriority());
-            existingReferral.setStatus(newReferral.getStatus());
-            return referralRepository.save(existingReferral);
-        });
+    public List<ReferralDTO>
+    getReferralsByPriority(
+            String priority) {
+
+        return referralRepository
+                .findByPriority(
+                        Referral.Priority.valueOf(priority))
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public boolean deleteReferral(Long id) {
-        if (referralRepository.existsById(id)) {
-            referralRepository.deleteById(id);
-            return true;
-        }
-        return false;
+    public ReferralDTO updateReferral(
+            Long id,
+            ReferralDTO dto) {
+
+        Referral existing =
+                referralRepository.findById(id)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Referral not found with id : "
+                                                + id));
+
+        existing.setConsultationID(
+                dto.getConsultationID());
+
+        existing.setReferredToDepartment(
+                dto.getReferredToDepartment());
+
+        existing.setReason(
+                dto.getReason());
+
+        existing.setPriority(
+                Referral.Priority.valueOf(
+                        dto.getPriority()));
+
+        existing.setStatus(
+                dto.getStatus());
+
+        return convertToDTO(
+                referralRepository.save(existing));
+    }
+
+    @Override
+    public void deleteReferral(Long id) {
+
+        Referral referral =
+                referralRepository.findById(id)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Referral not found with id : "
+                                                + id));
+
+        referralRepository.delete(referral);
+    }
+
+    private ReferralDTO convertToDTO(
+            Referral referral) {
+
+        ReferralDTO dto =
+                new ReferralDTO();
+
+        dto.setReferralId(
+                referral.getReferralID());
+
+        dto.setConsultationID(
+                referral.getConsultationID());
+
+        dto.setReferredToDepartment(
+                referral.getReferredToDepartment());
+
+        dto.setReason(
+                referral.getReason());
+
+        dto.setPriority(
+                referral.getPriority().name());
+
+        dto.setStatus(
+                referral.getStatus());
+
+        return dto;
     }
 }

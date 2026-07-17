@@ -1,9 +1,9 @@
 package com.cts.careNexus.workflow_emr.controller;
 
-import com.cts.careNexus.workflow_emr.dto.PrescriptionRequestDTO;
-import com.cts.careNexus.workflow_emr.entity.Prescription;
+import com.cts.careNexus.workflow_emr.dto.PrescriptionDTO;
+import com.cts.careNexus.exception.ResourceNotFoundException;
 import com.cts.careNexus.workflow_emr.service.PrescriptionService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,57 +14,74 @@ import java.util.List;
 @RequestMapping("/api/prescriptions")
 public class PrescriptionController {
 
-    @Autowired
-    private PrescriptionService prescriptionService;
+    private final PrescriptionService prescriptionService;
 
-
-    @PostMapping
-    public ResponseEntity<Prescription> createPrescription(@RequestBody PrescriptionRequestDTO dto) {
-        return new ResponseEntity<>(prescriptionService.createPrescription(dto), HttpStatus.CREATED);
+    public PrescriptionController(
+            PrescriptionService prescriptionService) {
+        this.prescriptionService = prescriptionService;
     }
 
+    @PostMapping
+    public ResponseEntity<PrescriptionDTO> createPrescription(
+            @Valid @RequestBody PrescriptionDTO dto) {
 
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(prescriptionService.createPrescription(dto));
+    }
 
     @GetMapping
-    public ResponseEntity<List<Prescription>> getAllPrescriptions() {
-        return ResponseEntity.ok(prescriptionService.getAllPrescriptions());
+    public ResponseEntity<List<PrescriptionDTO>> getAllPrescriptions() {
+
+        return ResponseEntity.ok(
+                prescriptionService.getAllPrescriptions());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Prescription> getPrescriptionById(@PathVariable Long id) {
-        return prescriptionService.getPrescriptionById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<PrescriptionDTO> getPrescriptionById(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                prescriptionService.getPrescriptionById(id)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Prescription not found with id : " + id)));
     }
 
-    @GetMapping("/patient/{patientID}")
-    public ResponseEntity<List<Prescription>> getByPatient(@PathVariable Long patientID) {
-        return ResponseEntity.ok(prescriptionService.getPrescriptionsByPatientId(patientID));
+    @GetMapping("/patient/{patientId}")
+    public ResponseEntity<List<PrescriptionDTO>>
+    getByPatient(
+            @PathVariable Long patientId) {
+
+        return ResponseEntity.ok(
+                prescriptionService.getPrescriptionsByPatientId(patientId));
     }
 
-    @GetMapping("/consultation/{consultationID}")
-    public ResponseEntity<List<Prescription>> getByConsultation(@PathVariable Long consultationID) {
-        return ResponseEntity.ok(prescriptionService.getPrescriptionsByConsultationId(consultationID));
+    @GetMapping("/consultation/{consultationId}")
+    public ResponseEntity<List<PrescriptionDTO>>
+    getByConsultation(
+            @PathVariable Long consultationId) {
+
+        return ResponseEntity.ok(
+                prescriptionService.getPrescriptionsByConsultationId(
+                        consultationId));
     }
-
-
 
     @PutMapping("/{id}")
-    public ResponseEntity<Prescription> updatePrescription(
+    public ResponseEntity<PrescriptionDTO> updatePrescription(
             @PathVariable Long id,
-            @RequestBody PrescriptionRequestDTO dto) {
+            @Valid @RequestBody PrescriptionDTO dto) {
 
-        return prescriptionService.updatePrescription(id, dto)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(
+                prescriptionService.updatePrescription(id, dto));
     }
 
-
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePrescription(@PathVariable Long id) {
-        if (prescriptionService.deletePrescription(id)) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<String> deletePrescription(
+            @PathVariable Long id) {
+
+        prescriptionService.deletePrescription(id);
+
+        return ResponseEntity.ok(
+                "Prescription deleted successfully");
     }
 }

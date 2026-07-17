@@ -1,62 +1,66 @@
 package com.cts.careNexus.appointment_schedule.controller;
 
-import com.cts.careNexus.appointment_schedule.dto.AppointmentRequestDTO;
-import com.cts.careNexus.appointment_schedule.entity.Appointment;
+import com.cts.careNexus.appointment_schedule.dto.AppointmentDTO;
+import com.cts.careNexus.exception.ResourceNotFoundException;
 import com.cts.careNexus.appointment_schedule.service.AppointmentService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/appointments")
 public class AppointmentController {
 
-    @Autowired
-    private AppointmentService appointmentService;
+    private final AppointmentService appointmentService;
 
-    @PostMapping("/create")
-    public ResponseEntity<Appointment> createAppointment(@Valid @RequestBody AppointmentRequestDTO dto) {
-
-        Appointment created = appointmentService.createAppointment(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    public AppointmentController(AppointmentService appointmentService) {
+        this.appointmentService = appointmentService;
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Appointment> updateAppointment(
-            @PathVariable Long id,
-            @RequestBody AppointmentRequestDTO dto) {
+    @PostMapping("/create")
+    public ResponseEntity<AppointmentDTO> createAppointment(
+            @Valid @RequestBody AppointmentDTO dto) {
 
-        return appointmentService.updateAppointment(id, dto)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(appointmentService.createAppointment(dto));
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<Appointment>> getAllAppointments() {
-        return ResponseEntity.ok(appointmentService.getAllAppointments());
+    public ResponseEntity<List<AppointmentDTO>> getAllAppointments() {
+
+        return ResponseEntity.ok(
+                appointmentService.getAllAppointments());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Appointment> getAppointmentById(@PathVariable Long id) {
-        return appointmentService.getAppointmentById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<AppointmentDTO> getAppointmentById(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                appointmentService.getAppointmentById(id)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Appointment not found with id : " + id)));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<AppointmentDTO> updateAppointment(
+            @PathVariable Long id,
+            @Valid @RequestBody AppointmentDTO dto) {
+
+        return ResponseEntity.ok(
+                appointmentService.updateAppointment(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> deleteAppointment(@PathVariable Long id) {
+    public ResponseEntity<String> deleteAppointment(
+            @PathVariable Long id) {
 
-        if (appointmentService.deleteAppointment(id)) {
-            Map<String, String> res = new HashMap<>();
-            res.put("message", "Deleted successfully");
-            return ResponseEntity.ok(res);
-        }
-        return ResponseEntity.notFound().build();
+        appointmentService.deleteAppointment(id);
+
+        return ResponseEntity.ok("Appointment deleted successfully");
     }
 }

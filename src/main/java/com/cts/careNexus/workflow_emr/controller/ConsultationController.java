@@ -1,9 +1,9 @@
 package com.cts.careNexus.workflow_emr.controller;
 
-import com.cts.careNexus.workflow_emr.dto.ConsultationRequestDTO;
-import com.cts.careNexus.workflow_emr.entity.Consultation;
+import com.cts.careNexus.workflow_emr.dto.ConsultationDTO;
+import com.cts.careNexus.exception.ResourceNotFoundException;
 import com.cts.careNexus.workflow_emr.service.ConsultationService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,48 +14,56 @@ import java.util.List;
 @RequestMapping("/api/consultations")
 public class ConsultationController {
 
-    @Autowired
-    private ConsultationService consultationService;
+    private final ConsultationService consultationService;
 
-
-    @PostMapping
-    public ResponseEntity<Consultation> createConsultation(@RequestBody ConsultationRequestDTO dto) {
-        Consultation saved = consultationService.createConsultation(dto);
-        return new ResponseEntity<>(saved, HttpStatus.CREATED);
+    public ConsultationController(
+            ConsultationService consultationService) {
+        this.consultationService = consultationService;
     }
 
+    @PostMapping
+    public ResponseEntity<ConsultationDTO> createConsultation(
+            @Valid @RequestBody ConsultationDTO dto) {
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(consultationService.createConsultation(dto));
+    }
 
     @GetMapping
-    public ResponseEntity<List<Consultation>> getAllConsultations() {
-        List<Consultation> consultations = consultationService.getAllConsultations();
-        return new ResponseEntity<>(consultations, HttpStatus.OK);
+    public ResponseEntity<List<ConsultationDTO>> getAllConsultations() {
+
+        return ResponseEntity.ok(
+                consultationService.getAllConsultations());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Consultation> getConsultationById(@PathVariable Long id) {
-        return consultationService.getConsultationById(id)
-                .map(consultation -> new ResponseEntity<>(consultation, HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
+    public ResponseEntity<ConsultationDTO> getConsultationById(
+            @PathVariable Long id) {
 
+        return ResponseEntity.ok(
+                consultationService.getConsultationById(id)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Consultation not found with id : "
+                                                + id)));
+    }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Consultation> updateConsultation(
+    public ResponseEntity<ConsultationDTO> updateConsultation(
             @PathVariable Long id,
-            @RequestBody ConsultationRequestDTO dto) {
+            @Valid @RequestBody ConsultationDTO dto) {
 
-        return consultationService.updateConsultation(id, dto)
-                .map(updated -> new ResponseEntity<>(updated, HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return ResponseEntity.ok(
+                consultationService.updateConsultation(id, dto));
     }
 
-
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteConsultation(@PathVariable Long id) {
-        boolean isDeleted = consultationService.deleteConsultation(id);
-        if (isDeleted) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    public ResponseEntity<String> deleteConsultation(
+            @PathVariable Long id) {
+
+        consultationService.deleteConsultation(id);
+
+        return ResponseEntity.ok(
+                "Consultation deleted successfully");
     }
 }

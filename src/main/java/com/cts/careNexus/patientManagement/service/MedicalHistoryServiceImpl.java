@@ -10,8 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class MedicalHistoryServiceImpl implements MedicalHistoryService {
@@ -22,6 +22,7 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     @Autowired
     private PatientRepo patientRepo;
 
+    // Validates the patient ID and fetches their associated medical history records mapped to DTOs.
     @Override
     @Transactional(readOnly = true)
     public List<MedicalHistoryDto> getMedicalHistoryByPatient(Long patientId) {
@@ -29,42 +30,26 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
             throw new RuntimeException("Patient not found with id: " + patientId);
         }
 
-        List<MedicalHistory> histories = medicalHistoryRepo.findByPatientPatientId(patientId);
-        List<MedicalHistoryDto> dtoList = new ArrayList<>();
-
-        for (MedicalHistory mh : histories) {
-            MedicalHistoryDto dto = new MedicalHistoryDto();
-            dto.setHistoryId(mh.getHistoryId());
-            dto.setCondition(mh.getCondition());
-            dto.setDiagnosedDate(mh.getDiagnosedDate());
-            dto.setStatus(mh.getStatus());
-            dto.setPatientId(mh.getPatient().getPatientId());
-            dtoList.add(dto);
-        }
-        return dtoList;
+        return medicalHistoryRepo.findByPatientPatientId(patientId)
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
     }
 
+    // Finds the patient, converts the DTO to an entity, links the patient, and saves the new record.
     @Override
     @Transactional
     public void addMedicalHistory(Long patientId, MedicalHistoryDto historyDto) {
         Patient patient = patientRepo.findById(patientId)
                 .orElseThrow(() -> new RuntimeException("Patient not found with id: " + patientId));
 
-        MedicalHistory history = new MedicalHistory();
-        history.setConditionName(historyDto.getCondition());
-        history.setDiagnosedDate(historyDto.getDiagnosedDate());
-
-        if (historyDto.getStatus() == null) {
-            history.setStatus(MedicalStatus.Active);
-        } else {
-            history.setStatus(historyDto.getStatus());
-        }
-
+        MedicalHistory history = mapToEntity(historyDto);
         history.setPatient(patient);
 
         medicalHistoryRepo.save(history);
     }
 
+    // Fetches the specific medical history record, updates its status, and returns the updated DTO.
     @Override
     @Transactional
     public MedicalHistoryDto updateHistoryStatus(Long historyId, MedicalStatus status) {
@@ -73,14 +58,36 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
 
         history.setStatus(status);
         MedicalHistory updatedHistory = medicalHistoryRepo.save(history);
+        return mapToDto(updatedHistory);
+    }
 
-        MedicalHistoryDto responseDto = new MedicalHistoryDto();
-        responseDto.setHistoryId(updatedHistory.getHistoryId());
-        responseDto.setCondition(updatedHistory.getCondition());
-        responseDto.setDiagnosedDate(updatedHistory.getDiagnosedDate());
-        responseDto.setStatus(updatedHistory.getStatus());
-        responseDto.setPatientId(updatedHistory.getPatient().getPatientId());
+    // Transforms a MedicalHistory entity object into a MedicalHistoryDto data transfer object.
+    private MedicalHistoryDto mapToDto(MedicalHistory mh) {
+        MedicalHistoryDto dto = new MedicalHistoryDto();
+        dto.setHistoryId(mh.getHistoryId());
+        dto.setCondition(mh.getCondition());
+        dto.setDiagnosedDate(mh.getDiagnosedDate());
+        dto.setStatus(mh.getStatus());
 
-        return responseDto;
+        if (mh.getPatient() != null) {
+            dto.setPatientId(mh.getPatient().getPatientId());
+        }
+        return dto;
+    }
+
+    // Transforms a MedicalHistoryDto into a MedicalHistory database entity, defaulting null status to Active.
+    private MedicalHistory mapToEntity(MedicalHistoryDto dto) {
+        MedicalHistory history = new MedicalHistory();
+        history.setHistoryId(dto.getHistoryId());
+        history.setCondition(dto.getCondition());
+        history.setDiagnosedDate(dto.getDiagnosedDate());
+
+        if (dto.getStatus() == null) {
+            history.setStatus(MedicalStatus.Active);
+        } else {
+            history.setStatus(dto.getStatus());
+        }
+
+        return history;
     }
 }

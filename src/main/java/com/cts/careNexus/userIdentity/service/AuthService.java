@@ -1,11 +1,11 @@
 package com.cts.careNexus.userIdentity.service;
 
-import com.cts.careNexus.userIdentity.dto.AuthResponse;
-import com.cts.careNexus.userIdentity.dto.LoginRequest;
-import com.cts.careNexus.userIdentity.dto.UserRegisterRequest;
+import com.cts.careNexus.userIdentity.dto.AuthResponseDto;
+import com.cts.careNexus.userIdentity.dto.LoginRequestDto;
+import com.cts.careNexus.userIdentity.dto.UserRegisterRequestDto;
 import com.cts.careNexus.userIdentity.entities.User;
 
 public interface AuthService {
-    User registerUser(UserRegisterRequest request);
-    AuthResponse login(LoginRequest request);
+    User registerUser(UserRegisterRequestDto request);
+    AuthResponseDto login(LoginRequestDto request);
 }

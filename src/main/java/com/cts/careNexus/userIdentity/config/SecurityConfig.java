@@ -1,3 +1,5 @@
+//Yeh tere security ki main configuration file hai.
+// Yeh poore application ke liye rules set karti hai
 package com.cts.careNexus.userIdentity.config;
 
 import org.springframework.context.annotation.Bean;
@@ -23,6 +25,7 @@ public class SecurityConfig {
         this.authFilter = authFilter;
     }
 
+    // Configures stateless session management, endpoint authorization rules, and registers the custom JWT filter.
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -38,11 +41,13 @@ public class SecurityConfig {
                 .build();
     }
 
+    // Defines the BCrypt strong hashing function bean to securely encode and verify user passwords.
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // Exposes the standard Spring Security AuthenticationManager bean responsible for processing login requests.
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();

@@ -70,4 +70,29 @@ public class GlobalExceptionHandler {
                 error,
                 HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+
+
+    @ExceptionHandler(DrugExpiredException.class)
+    public ResponseEntity<ErrorResponse> handleDrugExpiredException(RuntimeException e)
+
+    {
+        ErrorResponse errorResponse=new ErrorResponse(LocalDateTime.now(),HttpStatus.BAD_REQUEST.value(), "Bad Request",e.getMessage());
+        return new ResponseEntity<>(errorResponse,HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ClaimExceedAmountException.class)
+    public ResponseEntity<ErrorResponse> handleClaimExceedAmountException(ClaimExceedAmountException e)
+    {
+        ErrorResponse errorResponse=new ErrorResponse(LocalDateTime.now(),HttpStatus.BAD_REQUEST.value(), "Bad Request",e.getMessage());
+        return new ResponseEntity<>(errorResponse,HttpStatus.BAD_REQUEST);
+    }
+
+
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRequestException(InvalidRequestException e)
+    {
+        ErrorResponse errorResponse=new ErrorResponse(LocalDateTime.now(),HttpStatus.BAD_REQUEST.value(), "Bad Response",e.getMessage());
+        return new ResponseEntity<>(errorResponse,HttpStatus.BAD_REQUEST);
+    }
 }

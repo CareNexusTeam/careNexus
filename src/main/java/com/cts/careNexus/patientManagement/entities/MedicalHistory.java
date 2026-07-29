@@ -1,5 +1,6 @@
 package com.cts.careNexus.patientManagement.entities;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,7 +26,8 @@ public class MedicalHistory {
     @Column(name = "medical_condition")
     private String condition;
 
-    @Column(name = "Diagnosed_Date")
+    @Column(name = "diagnosed_date")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate diagnosedDate;
 
     @Enumerated(EnumType.STRING)

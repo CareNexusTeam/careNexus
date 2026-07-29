@@ -1,5 +1,6 @@
 //iska kaam sirf yeh check karna hai:
 // "Kya request ke saath sahi JWT token aaya hai?"
+
 package com.cts.careNexus.userIdentity.config;
 
 import com.cts.careNexus.userIdentity.service.JwtService;
@@ -17,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+// Intercepts every incoming HTTP request to validate JWT Bearer tokens and populate the SecurityContext with user authorities.
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
@@ -26,6 +28,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
+    // Filters incoming requests, skips public auth endpoints, verifies valid JWT tokens, and attaches UserDetails to SecurityContext.
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {

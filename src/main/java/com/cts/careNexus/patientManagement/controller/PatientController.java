@@ -4,10 +4,12 @@ import com.cts.careNexus.patientManagement.dto.PatientDto;
 import com.cts.careNexus.patientManagement.service.PatientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+// REST controller for patient management operations with fine-grained role-based security filters.
 @RestController
 @RequestMapping("/api/v1/patients")
 public class PatientController {
@@ -15,32 +17,37 @@ public class PatientController {
     @Autowired
     private PatientService patientService;
 
-    // Handles HTTP POST requests to accept a patient payload, register them via the service, and return the created record.
+    // Handles HTTP POST requests to register a new patient; allowed for Receptionists and Admins.
     @PostMapping("/create")
-    public ResponseEntity<PatientDto> registerPatient(@RequestBody PatientDto patientDto) { // 🔥 Entity ki jagah DTO use kiya
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    public ResponseEntity<PatientDto> registerPatient(@RequestBody PatientDto patientDto) {
         return ResponseEntity.ok(patientService.createPatient(patientDto));
     }
 
-    // Handles HTTP GET requests to fetch and return the complete list of all registered patients from the system.
+    // Handles HTTP GET requests to retrieve all patient records; accessible to Doctors, Receptionists, and Admins.
     @GetMapping("/all")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'RECEPTIONIST')")
     public ResponseEntity<List<PatientDto>> getAllPatients() {
         return ResponseEntity.ok(patientService.getAllPatients());
     }
 
-    // Handles HTTP GET requests to fetch and return the details of a specific patient using their path-provided ID.
+    // Handles HTTP GET requests to fetch details of a specific patient; accessible to Doctors, Receptionists, Patients, and Admins.
     @GetMapping("/{patientId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'RECEPTIONIST', 'PATIENT')")
     public ResponseEntity<PatientDto> getPatientById(@PathVariable Long patientId) {
         return ResponseEntity.ok(patientService.getPatientById(patientId));
     }
 
-    // Handles HTTP PATCH requests to partially update specific patient fields (like status) by their ID and return the modified data.
+    // Handles HTTP PATCH requests to update patient profile status; restricted to Receptionists and Admins.
     @PatchMapping("/{patientId}/status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<PatientDto> updatePatientStatus(@RequestBody PatientDto patientDto, @PathVariable Long patientId) {
         return ResponseEntity.ok(patientService.updatePatientStatus(patientDto, patientId));
     }
 
-    // Handles HTTP DELETE requests to permanently purge a specific patient's record from the database based on their ID.
+    // Handles HTTP DELETE requests to permanently purge a patient record; restricted strictly to Admins.
     @DeleteMapping("/{patientId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> hardDeletePatient(@PathVariable Long patientId) {
         patientService.deletePatient(patientId);
         return ResponseEntity.ok("Patient record permanently deleted from system.");

@@ -4,6 +4,7 @@ import com.cts.careNexus.billingandinsurance.dto.InvoiceDTO;
 import com.cts.careNexus.billingandinsurance.enums.InvoiceStatus;
 import com.cts.careNexus.billingandinsurance.service.InvoiceServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,10 +12,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/invoices")
 @RequiredArgsConstructor
+@CrossOrigin(origins ="https://localhost:4200")
+
 public class InvoiceController {
 
     private final InvoiceServiceImpl invoiceService;
 
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @PostMapping
     public InvoiceDTO createInvoice(@RequestBody InvoiceDTO invoiceDTO) {
 
@@ -24,7 +28,7 @@ public class InvoiceController {
 
         return invoiceService.createInvoice(invoiceDTO);
     }
-
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @GetMapping("/{id}")
     public InvoiceDTO getInvoiceById(@PathVariable Long id) {
 
@@ -32,7 +36,7 @@ public class InvoiceController {
 
         return invoiceService.getInvoiceById(id);
     }
-
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @GetMapping
     public List<InvoiceDTO> getInvoices(
             @RequestParam(required = false)
@@ -47,6 +51,7 @@ public class InvoiceController {
         return invoiceService.getAllInvoices();
     }
 
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @PatchMapping("/{id}/payment")
     public InvoiceDTO updatePayment(
             @PathVariable Long id,
@@ -58,6 +63,7 @@ public class InvoiceController {
         return invoiceService.updatePayment(id, amount);
     }
 
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @PatchMapping("/{id}/cancel")
     public InvoiceDTO cancelInvoice(@PathVariable Long id) {
 
@@ -66,6 +72,7 @@ public class InvoiceController {
         return invoiceService.cancelInvoice(id);
     }
 
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @GetMapping("/patients/{id}/invoices")
     public List<InvoiceDTO> getInvoicesByPatient(
             @PathVariable Long id) {

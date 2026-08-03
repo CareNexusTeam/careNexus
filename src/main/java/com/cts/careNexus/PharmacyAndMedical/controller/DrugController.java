@@ -4,10 +4,11 @@ import com.cts.careNexus.PharmacyAndMedical.dto.DrugDTO;
 import com.cts.careNexus.PharmacyAndMedical.enums.DrugStatus;
 import com.cts.careNexus.PharmacyAndMedical.service.DrugService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
+@CrossOrigin(origins ="https://localhost:4200")
 @RestController
 @RequestMapping("/api/drugs")
 public class DrugController {
@@ -15,6 +16,7 @@ public class DrugController {
     @Autowired
     private DrugService drugService;
 
+    @PreAuthorize("hasAnyRole('PHARMACIST', 'ADMIN')")
     @PostMapping
     public DrugDTO addDrug(@RequestBody DrugDTO drug) {
 
@@ -23,6 +25,7 @@ public class DrugController {
         return drugService.addDrug(drug);
     }
 
+    @PreAuthorize("hasAnyRole('PHARMACIST', 'ADMIN')")
     @GetMapping("/{drugId}")
     public DrugDTO getDrugById(@PathVariable Long drugId) {
 
@@ -31,6 +34,7 @@ public class DrugController {
         return drugService.getDrugById(drugId);
     }
 
+    @PreAuthorize("hasAnyRole('PHARMACIST', 'ADMIN')")
     @GetMapping
     public List<DrugDTO> getDrugs(
             @RequestParam(required = false) String category,
@@ -47,6 +51,7 @@ public class DrugController {
         return drugService.getAllDrugs();
     }
 
+    @PreAuthorize("hasAnyRole('PHARMACIST', 'ADMIN')")
     @DeleteMapping("/{drugId}")
     public String deleteDrug(@PathVariable Long drugId) {
 
@@ -55,6 +60,7 @@ public class DrugController {
         return drugService.deleteDrug(drugId);
     }
 
+    @PreAuthorize("hasAnyRole('PHARMACIST', 'ADMIN')")
     @PatchMapping("/{drugId}/stock")
     public DrugDTO updateStock(@PathVariable Long drugId,
                                @RequestParam int quantity) {
@@ -64,6 +70,7 @@ public class DrugController {
         return drugService.updateStock(drugId, quantity);
     }
 
+    @PreAuthorize("hasAnyRole('PHARMACIST', 'ADMIN')")
     @PatchMapping("/{drugId}/status")
     public DrugDTO updateStatus(@PathVariable Long drugId,
                                 @RequestParam DrugStatus status) {
@@ -73,6 +80,7 @@ public class DrugController {
         return drugService.updateDrugStatus(drugId, status);
     }
 
+    @PreAuthorize("hasAnyRole('PHARMACIST', 'ADMIN')")
     @GetMapping("/search")
     public List<DrugDTO> searchDrugs(@RequestParam String keyword) {
 
@@ -81,6 +89,7 @@ public class DrugController {
         return drugService.searchDrugs(keyword);
     }
 
+    @PreAuthorize("hasAnyRole('PHARMACIST', 'ADMIN')")
     @GetMapping("/expiring")
     public List<DrugDTO> getExpiringDrugs() {
 
@@ -89,6 +98,7 @@ public class DrugController {
         return drugService.getExpiringDrugs();
     }
 
+    @PreAuthorize("hasAnyRole('PHARMACIST', 'ADMIN')")
     @GetMapping("/low-stock")
     public List<DrugDTO> getLowStock() {
 

@@ -11,5 +11,6 @@ public interface DispensationService {
     public List<DispensationDTO> getPendingDispensations();
     public List<DispensationDTO> getDispensationHistory();
     public String dispenseDrug(Long prescriptionId, Long userId);
+    public void deleteDispensation(Long id);
 
 }

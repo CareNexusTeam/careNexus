@@ -4,6 +4,7 @@ import com.cts.careNexus.billingandinsurance.dto.InsuranceClaimDTO;
 import com.cts.careNexus.billingandinsurance.enums.ClaimStatus;
 import com.cts.careNexus.billingandinsurance.service.InsuranceClaimServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,10 +12,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/claims")
 @RequiredArgsConstructor
+@CrossOrigin(origins ="https://localhost:4200")
+
 public class InsuranceClaimController {
 
     private final InsuranceClaimServiceImpl claimService;
 
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @PostMapping
     public InsuranceClaimDTO createClaim(
             @RequestBody InsuranceClaimDTO claim) {
@@ -24,6 +28,7 @@ public class InsuranceClaimController {
         return claimService.createClaim(claim);
     }
 
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @GetMapping
     public List<InsuranceClaimDTO> getAllClaims() {
 
@@ -32,6 +37,7 @@ public class InsuranceClaimController {
         return claimService.getAllClaims();
     }
 
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @GetMapping("/{claimId}")
     public InsuranceClaimDTO getClaimById(
             @PathVariable Long claimId) {
@@ -41,6 +47,7 @@ public class InsuranceClaimController {
         return claimService.getClaimById(claimId);
     }
 
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @PatchMapping("/{claimId}/status")
     public InsuranceClaimDTO updateStatus(
             @PathVariable Long claimId,
@@ -51,6 +58,8 @@ public class InsuranceClaimController {
         return claimService.updateStatus(claimId, status);
     }
 
+
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @PostMapping("/{claimId}/submit")
     public InsuranceClaimDTO submitClaim(
             @PathVariable Long claimId) {

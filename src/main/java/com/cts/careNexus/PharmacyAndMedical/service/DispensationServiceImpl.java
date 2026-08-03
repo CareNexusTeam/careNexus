@@ -145,4 +145,12 @@ public class DispensationServiceImpl implements DispensationService {
 
         return "Status: " + status + ", Quantity Given: " + quantityDispensed;
     }
+
+    public void deleteDispensation(Long id) {
+        if (!dispRepo.existsById(id)) {
+            throw new ResourceNotFoundException("Dispensation not found");
+        }
+
+        dispRepo.deleteById(id);
+    }
 }

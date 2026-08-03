@@ -16,7 +16,7 @@ public class DispensationController {
     @Autowired
     private DispensationServiceImpl dispService;
 
-    @PreAuthorize(("hasRole('Pharmacist') or hasRole('Admin)"))
+    @PreAuthorize("hasAnyRole('PHARMACIST', 'ADMIN')")
     @PostMapping("/dispensations")
     public String dispenseDrug(@RequestParam Long prescriptionId,
                                @RequestParam Long userId) {
@@ -27,7 +27,7 @@ public class DispensationController {
         return dispService.dispenseDrug(prescriptionId, userId);
     }
 
-    @PreAuthorize(("hasRole('Pharmacist') or hasRole('Admin)"))
+    @PreAuthorize("hasAnyRole('PHARMACIST', 'ADMIN')")
     @GetMapping("/dispensations")
     public List<DispensationDTO> getAllDispensations() {
 
@@ -47,7 +47,7 @@ public class DispensationController {
         return dispService.getDispensationById(id);
     }
 
-    @PreAuthorize(("hasRole('Pharmacist') or hasRole('Admin)"))
+    @PreAuthorize("hasAnyRole('PHARMACIST', 'ADMIN')")
     @GetMapping("/dispensations/pending")
     public List<DispensationDTO> getPendingDispensations() {
 
@@ -56,7 +56,7 @@ public class DispensationController {
         return dispService.getPendingDispensations();
     }
 
-    @PreAuthorize(("hasRole('Pharmacist') or hasRole('Admin)"))
+    @PreAuthorize("hasAnyRole('PHARMACIST', 'ADMIN')")
     @GetMapping("/dispensations/history")
     public List<DispensationDTO> getDispensationHistory() {
 
@@ -65,7 +65,7 @@ public class DispensationController {
 
         return dispService.getDispensationHistory();
     }
-    @PreAuthorize(("hasRole('Pharmacist') or hasRole('Admin)"))
+    @PreAuthorize("hasAnyRole('PHARMACIST', 'ADMIN')")
     @GetMapping("/prescriptions/{id}/dispensation")
     public List<DispensationDTO> getByPrescription(
             @PathVariable Long id) {
@@ -74,4 +74,13 @@ public class DispensationController {
 
         return dispService.getByPrescription(id);
     }
+    @PreAuthorize("hasAnyRole('PHARMACIST', 'ADMIN')")
+    @DeleteMapping("/dispensations/{id}")
+    public void deleteDispensation(@PathVariable Long id)
+    {
+        dispService.deleteDispensation(id);
+
+    }
+
+
 }

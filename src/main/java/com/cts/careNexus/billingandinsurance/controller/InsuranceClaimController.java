@@ -18,7 +18,7 @@ public class InsuranceClaimController {
 
     private final InsuranceClaimServiceImpl claimService;
 
-    @PreAuthorize(("hasRole('Billing') or hasRole('Admin)"))
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @PostMapping
     public InsuranceClaimDTO createClaim(
             @RequestBody InsuranceClaimDTO claim) {
@@ -28,7 +28,7 @@ public class InsuranceClaimController {
         return claimService.createClaim(claim);
     }
 
-    @PreAuthorize(("hasRole('Billing') or hasRole('Admin)"))
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @GetMapping
     public List<InsuranceClaimDTO> getAllClaims() {
 
@@ -37,7 +37,7 @@ public class InsuranceClaimController {
         return claimService.getAllClaims();
     }
 
-    @PreAuthorize(("hasRole('Billing') or hasRole('Admin)"))
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @GetMapping("/{claimId}")
     public InsuranceClaimDTO getClaimById(
             @PathVariable Long claimId) {
@@ -47,7 +47,7 @@ public class InsuranceClaimController {
         return claimService.getClaimById(claimId);
     }
 
-    @PreAuthorize(("hasRole('Billing') or hasRole('Admin)"))
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @PatchMapping("/{claimId}/status")
     public InsuranceClaimDTO updateStatus(
             @PathVariable Long claimId,
@@ -59,7 +59,7 @@ public class InsuranceClaimController {
     }
 
 
-    @PreAuthorize(("hasRole('Billing') or hasRole('Admin)"))
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @PostMapping("/{claimId}/submit")
     public InsuranceClaimDTO submitClaim(
             @PathVariable Long claimId) {

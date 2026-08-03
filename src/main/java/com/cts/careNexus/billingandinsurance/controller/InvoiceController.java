@@ -18,7 +18,7 @@ public class InvoiceController {
 
     private final InvoiceServiceImpl invoiceService;
 
-    @PreAuthorize(("hasRole('Billing') or hasRole('Admin)"))
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @PostMapping
     public InvoiceDTO createInvoice(@RequestBody InvoiceDTO invoiceDTO) {
 
@@ -28,7 +28,7 @@ public class InvoiceController {
 
         return invoiceService.createInvoice(invoiceDTO);
     }
-    @PreAuthorize(("hasRole('Billing') or hasRole('Admin)"))
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @GetMapping("/{id}")
     public InvoiceDTO getInvoiceById(@PathVariable Long id) {
 
@@ -36,7 +36,7 @@ public class InvoiceController {
 
         return invoiceService.getInvoiceById(id);
     }
-    @PreAuthorize(("hasRole('Billing') or hasRole('Admin)"))
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @GetMapping
     public List<InvoiceDTO> getInvoices(
             @RequestParam(required = false)
@@ -51,7 +51,7 @@ public class InvoiceController {
         return invoiceService.getAllInvoices();
     }
 
-    @PreAuthorize(("hasRole('Billing') or hasRole('Admin)"))
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @PatchMapping("/{id}/payment")
     public InvoiceDTO updatePayment(
             @PathVariable Long id,
@@ -63,7 +63,7 @@ public class InvoiceController {
         return invoiceService.updatePayment(id, amount);
     }
 
-    @PreAuthorize(("hasRole('Billing') or hasRole('Admin)"))
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @PatchMapping("/{id}/cancel")
     public InvoiceDTO cancelInvoice(@PathVariable Long id) {
 
@@ -72,7 +72,7 @@ public class InvoiceController {
         return invoiceService.cancelInvoice(id);
     }
 
-    @PreAuthorize(("hasRole('Billing') or hasRole('Admin)"))
+    @PreAuthorize("hasAnyRole('BILLING' , 'ADMIN')")
     @GetMapping("/patients/{id}/invoices")
     public List<InvoiceDTO> getInvoicesByPatient(
             @PathVariable Long id) {

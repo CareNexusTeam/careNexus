@@ -1,6 +1,7 @@
 package com.cts.careNexus.analytics.controller;
 
 import com.cts.careNexus.analytics.entity.ClinicalReport;
+import com.cts.careNexus.analytics.entity.ClinicalReport.ReportScope;
 import com.cts.careNexus.analytics.service.AnalyticsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,8 +14,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Single REST controller for the Analytics & Reporting module.
- * Manages clinical report generation and metrics dashboards.
+ * REST controller for the Analytics & Reporting module (Section 2.7 & 4.7).
+ * Clinical reports are generated on-demand when calling the POST /api/analytics/reports/generate API,
+ * avoiding unwanted background report creation.
+ * Scope is strictly fixed to ReportScope enum (Department, Doctor, Period).
  */
 @RestController
 @RequestMapping("/api/analytics")
@@ -25,53 +28,65 @@ public class AnalyticsController {
     @Autowired
     private AnalyticsService analyticsService;
 
-    // POST /api/analytics/report - Save a clinical report (Requires Admin, Doctor, or Compliance role)
-    @PostMapping("/report")
-    @PreAuthorize("hasAnyRole('Admin', 'Doctor', 'Compliance')")
-    public ResponseEntity<ClinicalReport> generate(@RequestBody ClinicalReport report) {
-        log.info("API call: POST /api/analytics/report");
-        return ResponseEntity.ok(analyticsService.generateReport(report));
-    }
-
-    // POST /api/analytics/reports/generate - Generate automated report from DB (Requires Admin, Doctor, or Compliance role)
+    /**
+     * POST /api/analytics/reports/generate - On-demand API to auto-generate and save a report from live DB metrics.
+     * Accepts scope ("Department", "Doctor", "Period") and optional date range via query parameters or JSON body.
+     */
     @PostMapping("/reports/generate")
-    @PreAuthorize("hasAnyRole('Admin', 'Doctor', 'Compliance')")
-    public ResponseEntity<ClinicalReport> generateReport(@RequestBody Map<String, String> request) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'COMPLIANCE')")
+    public ResponseEntity<ClinicalReport> generateReport(
+            @RequestParam(value = "scope", required = false) String scopeParam,
+            @RequestParam(value = "startDate", required = false) String startDateParam,
+            @RequestParam(value = "endDate", required = false) String endDateParam,
+            @RequestBody(required = false) Map<String, String> body) {
+        
         log.info("API call: POST /api/analytics/reports/generate");
-        String scope = request != null ? request.getOrDefault("scope", "Period") : "Period";
-        String startDateStr = request != null ? request.get("startDate") : null;
-        String endDateStr = request != null ? request.get("endDate") : null;
+        
+        String scopeStr = scopeParam != null && !scopeParam.isBlank() 
+                ? scopeParam 
+                : (body != null ? body.getOrDefault("scope", "Period") : "Period");
+                
+        String startDateStr = startDateParam != null && !startDateParam.isBlank() 
+                ? startDateParam 
+                : (body != null ? body.get("startDate") : null);
+                
+        String endDateStr = endDateParam != null && !endDateParam.isBlank() 
+                ? endDateParam 
+                : (body != null ? body.get("endDate") : null);
+
+        ReportScope scope = analyticsService.parseScope(scopeStr);
         ClinicalReport report = analyticsService.generateAndSaveReport(scope, startDateStr, endDateStr);
         return ResponseEntity.ok(report);
     }
 
-    // GET /api/analytics/reports - List all clinical reports (Requires Admin, Doctor, Nurse, Billing, or Compliance role)
+    // GET /api/analytics/reports - List all generated clinical reports
     @GetMapping("/reports")
-    @PreAuthorize("hasAnyRole('Admin', 'Doctor', 'Nurse', 'Billing', 'Compliance')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'NURSE', 'BILLING', 'COMPLIANCE')")
     public ResponseEntity<List<ClinicalReport>> getAll() {
         log.info("API call: GET /api/analytics/reports");
         return ResponseEntity.ok(analyticsService.getAllReports());
     }
 
-    // GET /api/analytics/reports/{id} - Get report by ID (Requires Admin, Doctor, Nurse, Billing, or Compliance role)
+    // GET /api/analytics/reports/{id} - Fetch specific report by ID
     @GetMapping("/reports/{id}")
-    @PreAuthorize("hasAnyRole('Admin', 'Doctor', 'Nurse', 'Billing', 'Compliance')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'NURSE', 'BILLING', 'COMPLIANCE')")
     public ResponseEntity<ClinicalReport> getById(@PathVariable Long id) {
         log.info("API call: GET /api/analytics/reports/{}", id);
         return ResponseEntity.ok(analyticsService.getReportById(id));
     }
 
-    // GET /api/analytics/reports/scope/{scope} - Get reports by scope (Requires Admin, Doctor, or Compliance role)
+    // GET /api/analytics/reports/scope/{scope} - Fetch reports filtered by ReportScope enum (Department, Doctor, Period)
     @GetMapping("/reports/scope/{scope}")
-    @PreAuthorize("hasAnyRole('Admin', 'Doctor', 'Compliance')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'COMPLIANCE')")
     public ResponseEntity<List<ClinicalReport>> getByScope(@PathVariable String scope) {
         log.info("API call: GET /api/analytics/reports/scope/{}", scope);
-        return ResponseEntity.ok(analyticsService.getByScope(scope));
+        ReportScope reportScope = analyticsService.parseScope(scope);
+        return ResponseEntity.ok(analyticsService.getByScope(reportScope));
     }
 
-    // GET /api/analytics/patient-volume - Calculate live patient volume from DB (Requires Admin, Doctor, Nurse, or Compliance role)
+    // GET /api/analytics/patient-volume - Live patient volume calculated directly from DB
     @GetMapping("/patient-volume")
-    @PreAuthorize("hasAnyRole('Admin', 'Doctor', 'Nurse', 'Compliance')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'NURSE', 'COMPLIANCE')")
     public ResponseEntity<Map<String, Long>> getPatientVolume(
             @RequestParam(value = "startDate", required = false) String startDateStr,
             @RequestParam(value = "endDate", required = false) String endDateStr,
@@ -81,9 +96,9 @@ public class AnalyticsController {
         return ResponseEntity.ok(Map.of("patientCount", volume));
     }
 
-    // GET /api/analytics/revenue - Calculate financial revenue metrics from DB (Requires Admin, Billing, or Compliance role)
+    // GET /api/analytics/revenue - Live financial revenue metrics from DB
     @GetMapping("/revenue")
-    @PreAuthorize("hasAnyRole('Admin', 'Billing', 'Compliance')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BILLING', 'COMPLIANCE')")
     public ResponseEntity<Map<String, Double>> getRevenue(
             @RequestParam(value = "startDate", required = false) String startDateStr,
             @RequestParam(value = "endDate", required = false) String endDateStr) {
@@ -92,9 +107,9 @@ public class AnalyticsController {
         return ResponseEntity.ok(metrics);
     }
 
-    // GET /api/analytics/appointments - Aggregate appointment status counts from DB (Requires Admin, Doctor, Nurse, or Compliance role)
+    // GET /api/analytics/appointments - Aggregate appointment statistics from DB
     @GetMapping("/appointments")
-    @PreAuthorize("hasAnyRole('Admin', 'Doctor', 'Nurse', 'Compliance')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'NURSE', 'COMPLIANCE')")
     public ResponseEntity<Map<String, Long>> getAppointments(
             @RequestParam(value = "startDate", required = false) String startDateStr,
             @RequestParam(value = "endDate", required = false) String endDateStr) {
@@ -103,9 +118,9 @@ public class AnalyticsController {
         return ResponseEntity.ok(stats);
     }
 
-    // GET /api/analytics/prescriptions - Rank top prescribed medications from DB (Requires Admin, Doctor, Pharmacist, or Compliance role)
+    // GET /api/analytics/prescriptions - Rank top prescribed medications from DB
     @GetMapping("/prescriptions")
-    @PreAuthorize("hasAnyRole('Admin', 'Doctor', 'Pharmacist', 'Compliance')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'PHARMACIST', 'COMPLIANCE')")
     public ResponseEntity<List<Map<String, Object>>> getPrescriptions(
             @RequestParam(value = "limit", required = false, defaultValue = "10") int limit) {
         log.info("API call: GET /api/analytics/prescriptions");
@@ -113,9 +128,9 @@ public class AnalyticsController {
         return ResponseEntity.ok(list);
     }
 
-    // GET /api/analytics/department-performance - Aggregate volume & revenue per department (Requires Admin, Doctor, Compliance, or Billing role)
+    // GET /api/analytics/department-performance - Aggregate department performance from DB
     @GetMapping("/department-performance")
-    @PreAuthorize("hasAnyRole('Admin', 'Doctor', 'Compliance', 'Billing')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'COMPLIANCE', 'BILLING')")
     public ResponseEntity<List<Map<String, Object>>> getDepartmentPerformance(
             @RequestParam(value = "startDate", required = false) String startDateStr,
             @RequestParam(value = "endDate", required = false) String endDateStr) {
@@ -123,4 +138,16 @@ public class AnalyticsController {
         List<Map<String, Object>> list = analyticsService.getDepartmentPerformance(startDateStr, endDateStr);
         return ResponseEntity.ok(list);
     }
+
+    // GET /api/analytics/summary - Get complete KPI summary metrics from DB
+    @GetMapping("/summary")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'NURSE', 'BILLING', 'COMPLIANCE')")
+    public ResponseEntity<Map<String, Object>> getSummary(
+            @RequestParam(value = "startDate", required = false) String startDateStr,
+            @RequestParam(value = "endDate", required = false) String endDateStr) {
+        log.info("API call: GET /api/analytics/summary");
+        Map<String, Object> summary = analyticsService.getAnalyticsSummary(startDateStr, endDateStr);
+        return ResponseEntity.ok(summary);
+    }
 }
+

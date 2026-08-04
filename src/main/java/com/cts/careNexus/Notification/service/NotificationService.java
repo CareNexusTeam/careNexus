@@ -28,14 +28,14 @@ import java.util.List;
 /**
  * Service managing database-driven user notifications.
  * Automatically catches database records across categories (Appointments, Billing, Pharmacy, Clinical)
- * and generates corresponding user notifications (1 for patient, 1 for doctor on appointments).
+ * as soon as generated and creates corresponding user notifications (1 for patient, 1 for doctor on appointments).
+ * Exception handling delegates directly to GlobalExceptionHandler (InvalidRequestException, ResourceNotFoundException).
  */
 @Service
 public class NotificationService {
 
     private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
 
-    // Injected JPA repositories for DB data fetching
     @Autowired 
     private NotificationRepository notificationRepo;
     
@@ -68,24 +68,80 @@ public class NotificationService {
     }
 
     /**
-     * Automatically syncs and fetches user notifications by catching DB records across categories:
-     * - Appointment Category: Generates 1 notification for doctor and 1 for patient
-     * - Billing Category: Generates notifications for patient invoices
-     * - Clinical Category: Generates notifications for consultations
-     * - Pharmacy Category: Generates notifications for prescriptions
+     * Periodically called by background auto-scheduler to scan all activity records in DB
+     * (Appointments, Invoices, Consultations, Prescriptions) and automatically persist missing notifications.
      */
-    public List<NotificationDTO> getNotificationsByUser(Long userId) {
-        log.info("Fetching and syncing automatic DB notifications for user: {}", userId);
-        if (userId == null || userId <= 0) {
-            log.warn("Fetching notifications failed: invalid user ID: {}", userId);
-            throw new InvalidRequestException("Invalid user ID.");
+    public void syncAllNotifications() {
+        log.trace("Running auto-scheduled notification sync across all activity DB records...");
+
+        // 1. Process Appointment DB records: generate 1 notification for Doctor & 1 for Patient
+        List<Appointment> appointments = appointmentRepository.findAll();
+        for (Appointment appt : appointments) {
+            // Patient notification
+            if (appt.getPatientID() != null && appt.getPatientID().getPatientId() != null) {
+                Long patientId = appt.getPatientID().getPatientId();
+                userRepo.findById(patientId).ifPresent(patientUser -> {
+                    String doctorName = appt.getDoctorID() != null ? appt.getDoctorID().getName() : "Doctor";
+                    String msg = "Appointment #" + appt.getAppointmentID() + " scheduled with Dr. " + doctorName + " on " + appt.getScheduledDateTime();
+                    createNotificationIfNotExists(patientUser, msg, NotificationCategory.Appointment);
+                });
+            }
+            // Doctor notification
+            if (appt.getDoctorID() != null && appt.getDoctorID().getUserId() != null) {
+                User doctor = appt.getDoctorID();
+                String patientName = appt.getPatientID() != null ? appt.getPatientID().getName() : "Patient";
+                String msg = "New appointment #" + appt.getAppointmentID() + " scheduled with patient " + patientName + " on " + appt.getScheduledDateTime();
+                createNotificationIfNotExists(doctor, msg, NotificationCategory.Appointment);
+            }
         }
 
-        User targetUser = userRepo.findById(userId)
-                .orElseThrow(() -> {
-                    log.warn("Fetching notifications failed: user not found: {}", userId);
-                    return new ResourceNotFoundException("User not found with ID: " + userId);
+        // 2. Process Billing DB records: catch unpaid/pending invoices for patient
+        List<Invoice> invoices = invoiceRepository.findAll();
+        for (Invoice inv : invoices) {
+            if (inv.getPatient() != null && inv.getPatient().getPatientId() != null) {
+                Long patientId = inv.getPatient().getPatientId();
+                userRepo.findById(patientId).ifPresent(patientUser -> {
+                    String msg = "Invoice #" + inv.getInvoiceID() + " - Status: " + inv.getStatus() + ", Outstanding Amount: $" + inv.getOutstandingAmount();
+                    createNotificationIfNotExists(patientUser, msg, NotificationCategory.Billing);
                 });
+            }
+        }
+
+        // 3. Process Clinical DB records: catch consultations
+        List<Consultation> consultations = consultationRepository.findAll();
+        for (Consultation c : consultations) {
+            String msg = "Consultation #" + c.getConsultationID() + " - Status: " + c.getStatus() + ", Diagnosis: " + (c.getDiagnosis() != null ? c.getDiagnosis() : "Pending");
+            if (c.getDoctor() != null && c.getDoctor().getUserId() != null) {
+                createNotificationIfNotExists(c.getDoctor(), msg, NotificationCategory.Clinical);
+            }
+            if (c.getPatient() != null && c.getPatient().getPatientId() != null) {
+                userRepo.findById(c.getPatient().getPatientId()).ifPresent(patientUser -> {
+                    createNotificationIfNotExists(patientUser, msg, NotificationCategory.Clinical);
+                });
+            }
+        }
+
+        // 4. Process Pharmacy DB records: catch prescriptions
+        List<Prescription> prescriptions = prescriptionRepository.findAll();
+        for (Prescription p : prescriptions) {
+            if (p.getPatient() != null && p.getPatient().getPatientId() != null) {
+                userRepo.findById(p.getPatient().getPatientId()).ifPresent(patientUser -> {
+                    String msg = "Prescription #" + p.getPrescriptionID() + " issued for " + p.getMedicationName() + " (" + p.getDosage() + ")";
+                    createNotificationIfNotExists(patientUser, msg, NotificationCategory.Pharmacy);
+                });
+            }
+        }
+    }
+
+    /**
+     * Automatically syncs notifications for a specific user upon notification access.
+     */
+    public void syncNotificationsForUser(Long userId) {
+        if (userId == null || userId <= 0) return;
+        User targetUser = userRepo.findById(userId).orElse(null);
+        if (targetUser == null) return;
+
+        log.info("Auto-syncing notifications for user ID: {}", userId);
 
         // 1. Process Appointment DB records: generate 1 notification for Doctor & 1 for Patient
         List<Appointment> appointments = appointmentRepository.findAll();
@@ -132,6 +188,26 @@ public class NotificationService {
                 createNotificationIfNotExists(targetUser, msg, NotificationCategory.Pharmacy);
             }
         }
+    }
+
+    /**
+     * Automatically syncs and fetches user notifications by catching DB records.
+     */
+    public List<NotificationDTO> getNotificationsByUser(Long userId) {
+        log.info("Fetching and syncing automatic DB notifications for user: {}", userId);
+        if (userId == null || userId <= 0) {
+            log.warn("Fetching notifications failed: invalid user ID: {}", userId);
+            throw new InvalidRequestException("Invalid user ID.");
+        }
+
+        userRepo.findById(userId)
+                .orElseThrow(() -> {
+                    log.warn("Fetching notifications failed: user not found: {}", userId);
+                    return new ResourceNotFoundException("User not found with ID: " + userId);
+                });
+
+        // Trigger notification auto-generation for target user
+        syncNotificationsForUser(userId);
 
         // Return all synchronized DB notifications for user
         List<Notification> userNotifications = notificationRepo.findByUserUserId(userId);
@@ -221,6 +297,30 @@ public class NotificationService {
                     return new ResourceNotFoundException("User not found with ID: " + userId);
                 });
 
+        // Trigger notification auto-generation for target user
+        syncNotificationsForUser(userId);
+
         return notificationRepo.countByUserUserIdAndStatus(userId, NotificationStatus.Unread);
     }
+
+    // Get notifications by user email (from Security Context)
+    public List<NotificationDTO> getNotificationsByEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new InvalidRequestException("Invalid user email.");
+        }
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+        return getNotificationsByUser(user.getUserId());
+    }
+
+    // Get unread count by user email (from Security Context)
+    public long getUnreadCountByEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new InvalidRequestException("Invalid user email.");
+        }
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+        return getUnreadCount(user.getUserId());
+    }
 }
+

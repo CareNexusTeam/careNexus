@@ -8,7 +8,10 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-// JPA Entity representing clinical analytics reports and system metrics
+/**
+ * JPA Entity representing clinical analytics reports and system metrics.
+ * Scope uses ReportScope enum directly (Department, Doctor, Period).
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,9 +26,10 @@ public class ClinicalReport {
     @Column(name = "report_id")
     private Long reportId;
 
-    // Scope of analysis (e.g., "Department", "Doctor", "Period")
-    @Column(name = "scope", nullable = false, length = 100)
-    private String scope;
+    // Scope enum mapped directly to string in DB (Department, Doctor, Period)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "scope", nullable = false, length = 50)
+    private ReportScope scope = ReportScope.Period;
 
     // Total patient count calculated within the report scope
     @Column(name = "patient_count")
@@ -46,4 +50,19 @@ public class ClinicalReport {
     // Timestamp when this clinical report was generated
     @Column(name = "generated_date", nullable = false)
     private LocalDateTime generatedDate;
+
+    @PrePersist
+    public void prePersist() {
+        if (generatedDate == null) {
+            generatedDate = LocalDateTime.now();
+        }
+        if (scope == null) {
+            scope = ReportScope.Period;
+        }
+    }
+
+    // Fixed report scopes as defined in section 2.7 & 4.7 of PDF documentation
+    public enum ReportScope {
+        Department, Doctor, Period
+    }
 }
